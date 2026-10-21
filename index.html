@@ -61,7 +61,7 @@ body.dark .warn-row{background:#422006}
 <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px"><input id="rIn" type="number" step="any" value="5" style="width:70px;padding:5px"> NM <button id="rBtn" style="margin:0">Quick Circle <BR> (คลิกแผนที่)</button></div>
 <button id="clr">ล้างทั้งหมด</button>
 <div id="res"></div>
-<p style="font-size:11px;color:#64748b">This is an alpha test. Please expect that bugs and glitches may occur.</p>
+<p style="font-size:11px;color:#64748b">This is an alpha test. Please expect that bugs and glitches may be occur.</p>
 </aside>
 <main><div id="map"></div><div id="tbl"></div></main>
 <dialog id="help" style="width:min(720px,95vw)"><form method="dialog">
@@ -104,7 +104,7 @@ function refresh(){
  v.forEach(r=>{if(hid.has(key(r)))return;const c=CAT[r.cat]||'#555';
   if($('showR').checked&&r.rNM)L.circle([r.lat,r.lng],{radius:r.rNM*NM,color:c,weight:1,fillOpacity:.06,interactive:false}).addTo(lay);
   mk_[key(r)]=L.circleMarker([r.lat,r.lng],{radius:8,color:'#fff',weight:2,fillColor:c,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop(r)).bindTooltip(r.type+' · '+r.place).addTo(lay)});
- $('chips').innerHTML=Object.keys(CAT).map(k=>`<label class="chip"><input type="checkbox" data-c="${k}" ${off.has(k)?'':'checked'}><span class="dot" style="background:${CAT[k]}"></span>${k==='โคม'?'โคม (ลอย/ไฟ/ควัน)':k} (${recs.filter(r=>r.cat===k).length})</label>`).join('');
+ $('chips').innerHTML=Object.keys(CAT).map(k=>`<label class="chip"><input type="checkbox" data-c="${k}" ${off.has(k)?'':'checked'}><span class="dot" style="background:${CAT[k]}"></span>${k==='โคม'?'โคมลอย, โคมไฟ, โคมควัน':k} (${recs.filter(r=>r.cat===k).length})</label>`).join('');
  const cnt={};recs.forEach(r=>datesOf(r).forEach(d=>cnt[d]=(cnt[d]||0)+1));
  $('dchips').innerHTML=Object.keys(cnt).sort().map(d=>`<label class="chip"><input type="checkbox" data-dt="${d}" ${offD.has(d)?'':'checked'}>${thD(d)} (${cnt[d]})</label>`).join('')||'<span style="font-size:12px;color:#94a3b8">ยังไม่มีข้อมูลวันที่</span>';
  const cols=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอ'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['lat','พิกัด']];
