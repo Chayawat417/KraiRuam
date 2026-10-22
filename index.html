@@ -42,6 +42,7 @@ body.dark input,body.dark select,body.dark textarea{background:#0f172a;color:#e2
 body.dark dialog{background:#1e293b;border-color:#334155;color:#e2e8f0}
 body.dark a{color:#60a5fa}
 body.dark .warn-row{background:#422006}
+body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)}
 #pasteBtn{background:#16a34a;color:#fff;border-color:#15803d}#pasteBtn:hover{background:#22c55e;border-color:#16a34a}
 #helpBtn{background:#f97316;color:#1e3a5f;border-color:#ea580c;font-weight:600}#helpBtn:hover{background:#fdba74;border-color:#f97316}
 </style></head><body>
@@ -51,8 +52,9 @@ body.dark .warn-row{background:#422006}
 <textarea id="paste" rows="3" placeholder="วางตารางที่ได้ AI หรือ คัดลอกจาก Excel " style="width:100%;margin-top:6px;padding:6px;font:12px monospace"></textarea>
 <button id="pasteBtn">นำเข้าตารางจาก AI</button><button id="helpBtn">📋 วิธีเตรียมข้อมูล + Prompt</button>
 <div id="msg"></div>
+<p style="font-size:12px;color:#dc2626;font-weight:600;border:1px solid #dc2626;border-radius:6px;padding:6px 8px;margin:8px 0 2px">⚠️ กรุณาตรวจทานความถูกต้องของข้อมูลทุกครั้ง ก่อนนำไปใช้งานจริง</p>
 <h3>จัดการข้อมูล</h3>
-<button id="add">+ เพิ่มคำขอ</button><button id="geo">ตรวจสอบ ตำบล อำเภอ จังหวัด จากพิกัด</button><button id="csv">ส่งออก CSV</button><button id="json">ส่งออก JSON</button><button id="reset">ล้างคำขอทั้งหมด</button>
+<button id="add">+ เพิ่มคำขอ</button><button id="geo">ตรวจสอบ ตำบล อำเภอ จังหวัด จากพิกัด</button><button id="csv">ส่งออก CSV</button><button id="json">ส่งออก JSON</button><button id="wordBtn">📄 ส่งออก Word</button><button id="reset">ล้างคำขอทั้งหมด</button>
 <h3>กรองชนิด</h3><div id="chips"></div>
 <h3>กรองวันที่ <a href="#" id="dAll" style="font-weight:400">ทั้งหมด</a> · <a href="#" id="dNone" style="font-weight:400">ไม่เลือกทั้งหมด</a></h3><div id="dchips" style="max-height:140px;overflow:auto"></div>
 <h3>กรองเวลา <a href="#" id="tClr" style="font-weight:400">ล้าง</a></h3>
@@ -79,7 +81,7 @@ body.dark .warn-row{background:#422006}
 <b id="dt">ข้อมูลกิจกรรม</b>
 <label>เลขที่คำขอ<input name="id"></label>
 <label>ชนิด<select name="type"><option>โคมลอย<option>โคมไฟ<option>โคมควัน<option>พลุ<option>บั้งไฟ<option>ตะไล</select></label>
-<label>ผู้ขอ<input name="name"></label><label>สถานที่<input name="place"></label>
+<label>ผู้ขอใบอนุญาต<input name="name"></label><label>ผู้จัดกิจกรรม<input name="org" placeholder="คั่นด้วย /"></label><label>สถานที่<input name="place"></label>
 <label>ตำบล<input name="tambon"></label><label>อำเภอ<input name="amphoe"></label><label>จังหวัด<input name="prov"></label>
 <label>Lat<input name="lat" type="number" step="any" required></label><label>Lng<input name="lng" type="number" step="any" required></label>
 <label>เส้นผ่านศูนย์กลาง<input name="dia" type="number" step="any"></label>
@@ -101,7 +103,7 @@ const lay=L.layerGroup().addTo(map);let mk_={},off=new Set(),offD=new Set(),hid=
 const key=r=>r.id+'|'+r.lat;
 const _dc=new WeakMap();
 function datesOf(r){if(_dc.has(r))return _dc.get(r);if(!r.d1){_dc.set(r,[]);return[]}const o=[];let d=new Date(r.d1+'T00:00:00Z');const e=new Date((r.d2||r.d1)+'T00:00:00Z');for(let i=0;i<60&&d<=e;i++){o.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5)}_dc.set(r,o);return o}
-const pop=r=>`<b>${r.id}</b> · ${r.type}<br>${r.name}<br>📍 ${r.place}<br>ต.${r.tambon||'-'} อ.${r.amphoe||'-'} จ.${r.prov||'-'}<br>Ø ${f1(r.dIn,1)} นิ้ว · สูง ${r.ft??'-'} ft · รัศมี ${f1(r.rNM)} NM<br>${r.qty??''} ชิ้น · ${r.date||''} ${r.time||''}<br>${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}${r.extra?Object.entries(r.extra).map(([k,v])=>`<br>${k}: ${v}`).join(''):''}${r.warn?`<br>⚠️ ${r.warn}`:''}<br><button onclick="circAt(${r.lat},${r.lng},${r.rNM||''})">⭕ วัดวงกลมรอบจุดนี้</button>`;
+const pop=r=>`<b>${r.id}</b> · ${r.type}<br>👤 ${r.name}${r.org?`<br>🏢 ${r.org}`:''}<br>📍 ${r.place}<br>ต.${r.tambon||'-'} อ.${r.amphoe||'-'} จ.${r.prov||'-'}<br>Ø ${f1(r.dIn,1)} นิ้ว · สูง ${r.ft??'-'} ft · รัศมี ${f1(r.rNM)} NM<br>${r.qty??''} ชิ้น · ${r.date||''} ${r.time||''}<br>${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}${r.extra?Object.entries(r.extra).map(([k,v])=>`<br>${k}: ${v}`).join(''):''}${r.warn?`<br>⚠️ ${r.warn}`:''}<br><button onclick="circAt(${r.lat},${r.lng},${r.rNM||''})">⭕ วัดวงกลมรอบจุดนี้</button>`;
 function view(){const q=$('q').value.trim(),tf=$('tFrom').value,tt=$('tTo').value;return recs.filter(r=>{const ds=datesOf(r);if(off.has(r.cat))return false;if(ds.length&&!ds.some(d=>!offD.has(d)))return false;if(tf&&r.t1&&r.t1<tf)return false;if(tt&&r.t1&&r.t1>tt)return false;return !q||[r.id,r.name,r.place,r.tambon,r.amphoe,r.prov,r.type].join(' ').includes(q)})}
 function refresh(){
  const v=view();lay.clearLayers();mk_={};
@@ -111,10 +113,10 @@ function refresh(){
  $('chips').innerHTML=Object.keys(CAT).map(k=>`<label class="chip"><input type="checkbox" data-c="${k}" ${off.has(k)?'':'checked'}><span class="dot" style="background:${CAT[k]}"></span>${k==='โคม'?'โคมลอย, โคมไฟ, โคมควัน':k} (${recs.filter(r=>r.cat===k).length})</label>`).join('');
  const cnt={};recs.forEach(r=>datesOf(r).forEach(d=>cnt[d]=(cnt[d]||0)+1));
  $('dchips').innerHTML=Object.keys(cnt).sort().map(d=>`<label class="chip"><input type="checkbox" data-dt="${d}" ${offD.has(d)?'':'checked'}>${thD(d)} (${cnt[d]})</label>`).join('')||'<span style="font-size:12px;color:#94a3b8">ยังไม่มีข้อมูลวันที่</span>';
- const cols=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอ'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['time','เวลา'],['lat','พิกัด']];
+ const cols=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอใบอนุญาต'],['org','ผู้จัดกิจกรรม'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['time','เวลา'],['lat','พิกัด']];
  if(sortK)v.sort((a,b)=>(a[sortK]>b[sortK]?1:-1)*sortD);
  const allOn=v.length&&v.every(r=>!hid.has(key(r)));
- $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map(c=>`<th data-s="${c[0]}">${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':'<tr><td colspan=15 style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>')+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td><td>${r.id}</td><td>${r.type}</td><td>${r.name}</td><td>${r.place}</td><td>${r.tambon||''}</td><td>${r.amphoe||''}</td><td>${r.prov||''}</td><td class=n>${f1(r.dIn,1)}</td><td class=n>${r.ft??''}</td><td class=n>${f1(r.rNM)}</td><td class=n>${r.qty??''}</td><td>${r.date||''}</td><td>${r.time||''}</td><td>${r.lat.toFixed(5)}, ${r.lng.toFixed(5)} <a href="#" data-cp="${r.lat.toFixed(6)},${r.lng.toFixed(6)}" title="คัดลอกพิกัด">⧉</a></td><td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
+ $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map(c=>`<th data-s="${c[0]}">${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':'<tr><td colspan=15 style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>')+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td><td>${r.id}</td><td>${r.type}</td><td>${r.name}</td><td>${r.org||''}</td><td>${r.place}</td><td>${r.tambon||''}</td><td>${r.amphoe||''}</td><td>${r.prov||''}</td><td class=n>${f1(r.dIn,1)}</td><td class=n>${r.ft??''}</td><td class=n>${f1(r.rNM)}</td><td class=n>${r.qty??''}</td><td>${r.date||''}</td><td>${r.time||''}</td><td>${r.lat.toFixed(5)}, ${r.lng.toFixed(5)} <a href="#" data-cp="${r.lat.toFixed(6)},${r.lng.toFixed(6)}" title="คัดลอกพิกัด">⧉</a></td><td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
 }
 document.addEventListener('change',e=>{const d=e.target.dataset;
  if(d.dt){e.target.checked?offD.delete(d.dt):offD.add(d.dt);return refresh()}
@@ -135,10 +137,10 @@ $('tbl').onclick=e=>{const t=e.target,k=t.dataset.e||t.dataset.d;
 // ---- add/edit
 let cur=null;
 function edit(r){cur=r;const f=$('f'),d=r||{type:'โคมลอย',dIn:'',ft:6000,rNM:10};
- f.id.value=d.id||'';f.type.value=d.type;f.name.value=d.name||'';f.place.value=d.place||'';f.tambon.value=d.tambon||'';f.amphoe.value=d.amphoe||'ดอยสะเก็ด';f.prov.value=d.prov||'เชียงใหม่';
+ f.id.value=d.id||'';f.type.value=d.type;f.name.value=d.name||'';f.org.value=d.org||'';f.place.value=d.place||'';f.tambon.value=d.tambon||'';f.amphoe.value=d.amphoe||'ดอยสะเก็ด';f.prov.value=d.prov||'เชียงใหม่';
  f.lat.value=d.lat??'';f.lng.value=d.lng??'';f.dia.value=d.dIn===''?'':f1(d.dIn,2);f.du.value='นิ้ว';f.ft.value=d.ft??'';f.rad.value=f1(d.rNM,3);f.qty.value=d.qty??'';f.date.value=d.date||'';$('dlg').showModal()}
 $('add').onclick=()=>edit(null);
-$('f').onsubmit=e=>{if(e.submitter.value!=='ok')return;const f=e.target,o={id:f.id.value,type:f.type.value,cat:catOf(f.type.value),name:f.name.value,place:f.place.value,tambon:f.tambon.value,amphoe:f.amphoe.value,prov:f.prov.value,lat:+f.lat.value,lng:+f.lng.value,dIn:toIn(+f.dia.value,f.du.value),ft:f.ft.value?+f.ft.value:null,rNM:+f.rad.value,qty:f.qty.value,date:f.date.value,time:cur?.time||'',wt:cur?.wt||'',warn:''};
+$('f').onsubmit=e=>{if(e.submitter.value!=='ok')return;const f=e.target,o={id:f.id.value,type:f.type.value,cat:catOf(f.type.value),name:f.name.value,org:f.org.value,place:f.place.value,tambon:f.tambon.value,amphoe:f.amphoe.value,prov:f.prov.value,lat:+f.lat.value,lng:+f.lng.value,dIn:toIn(+f.dia.value,f.du.value),ft:f.ft.value?+f.ft.value:null,rNM:+f.rad.value,qty:f.qty.value,date:f.date.value,time:cur?.time||'',wt:cur?.wt||'',warn:''};
  if(cur){_dc.delete(cur);Object.assign(cur,o)}else recs.push(o);refresh()};
 // ---- นำเข้าข้อมูล CSV / Excel / ข้อความที่วาง
 const PROMPT=`คุณเป็นผู้ช่วยดึงข้อมูลจากเอกสาร "แบบรับรองพิกัดพื้นที่ใช้ประกอบกิจกรรมเพื่อประกอบการพิจารณาอนุญาตให้จุดและปล่อยบั้งไฟ โคมลอย โคมไฟ โคมควัน" ที่แนบมา (1 หน้า = 1 คำขอ)
@@ -146,12 +148,13 @@ const PROMPT=`คุณเป็นผู้ช่วยดึงข้อมู
 งาน: อ่านทุกหน้า แล้วสร้างตาราง CSV เดียว 1 แถวต่อ 1 หน้า
 
 # หัวคอลัมน์ (ใช้ชื่อและลำดับนี้ เท่านั้น)
-เลขที่คำขอ,ชนิด,ผู้ขอ,สถานที่,ตำบล,อำเภอ,จังหวัด,ละติจูด,ลองจิจูด,องศาละติจูด,องศาลองจิจูด,เส้นผ่านศูนย์กลาง(นิ้ว),ความสูง(ฟุต),รัศมี(NM),จำนวน,น้ำหนัก,วันที่เริ่ม,วันที่สิ้นสุด,เวลาเริ่ม,เวลาสิ้นสุด,หมายเหตุ
+เลขที่คำขอ,ชนิด,ผู้ขอใบอนุญาต,ผู้จัดกิจกรรม,สถานที่,ตำบล,อำเภอ,จังหวัด,ละติจูด,ลองจิจูด,องศาละติจูด,องศาลองจิจูด,เส้นผ่านศูนย์กลาง(นิ้ว),ความสูง(ฟุต),รัศมี(NM),จำนวน,น้ำหนัก,วันที่เริ่ม,วันที่สิ้นสุด,เวลาเริ่ม,เวลาสิ้นสุด,หมายเหตุ
 
 # ข้อกำหนดในแต่ละคอลัมน์
-- เลขที่คำขอ: เลขที่ท้ายหน้า เช่น RQ79/2569
+- เลขที่คำขอ: เลขที่ท้ายหน้า เช่น RQ79/2569 — ถ้าอ่านไม่ออกหรือตัวเลขไม่ชัดเจน ให้ใส่ว่า ไม่สามารถอ่านหมายเลขได้ (ห้ามเดาหรือสร้างเลขขึ้นมาเอง)
 - ชนิด: ต้องเป็นหนึ่งในนี้เท่านั้น: โคมลอย, โคมไฟ, โคมควัน, พลุ, บั้งไฟ, ตะไล (ใช้ชนิดที่เขียนในช่อง "ขอรับใบอนุญาตให้จุดและปล่อยชนิด")
-- ผู้ขอ: ชื่อผู้ขอ ตัดคำนำหน้าออก
+- ผู้ขอใบอนุญาต: ชื่อจากช่อง "ข้าพเจ้า" ตัดคำนำหน้าออก
+- ผู้จัดกิจกรรม: รายชื่อจากหัวข้อ "โดยมีผู้ประกอบการจัดกิจกรรม" คั่นแต่ละชื่อด้วย / ถ้าไม่มีให้เว้นว่าง — ต้องครอบค่าด้วยเครื่องหมายคำพูดคู่เสมอ เช่น "สมชาย ดี / สมหญิง งาม" เนื่องจากอาจมีเครื่องหมาย , ในชื่อ
 - สถานที่: ช่อง "สถานที่/พื้นที่"
 - ตำบล: ตำบลของสถานที่จุด ถ้าเอกสารไม่ระบุให้เว้นว่าง (ห้ามใช้ตำบลที่อยู่ของผู้ขอ)
 - อำเภอ, จังหวัด: จากบรรทัด "เขียนที่" ไม่ต้องใส่คำว่า อำเภอ/จังหวัด
@@ -174,18 +177,19 @@ const PROMPT=`คุณเป็นผู้ช่วยดึงข้อมู
 
 # รูปแบบคำตอบ
 ตอบเป็น CSV ในโค้ดบล็อกเดียว บรรทัดแรกคือหัวคอลัมน์ ครอบข้อความที่มีเครื่องหมายจุลภาคด้วยเครื่องหมายคำพูดคู่ ไม่ต้องมีคำอธิบายนอกโค้ดบล็อก
+⚠️ สำคัญมาก: คอลัมน์ "ผู้จัดกิจกรรม" ต้องครอบด้วย "..." เสมอ เพราะชื่ออาจมีเครื่องหมาย , เช่น "นายก / นางสาวข, นางค" ถ้าไม่ครอบจะทำให้คอลัมน์ทั้งแถวผิดทั้งหมด
 
 # ตัวอย่างแถวที่ถูกต้อง
-RQ79/2569,โคมลอย,สมชาย ขายขำ,วัดฝั่งหมิ่น,ลวงเหนือ,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,`;
-const HDR='เลขที่คำขอ,ชนิด,ผู้ขอ,สถานที่,ตำบล,อำเภอ,จังหวัด,ละติจูด,ลองจิจูด,องศาละติจูด,องศาลองจิจูด,เส้นผ่านศูนย์กลาง(นิ้ว),ความสูง(ฟุต),รัศมี(NM),จำนวน,น้ำหนัก,วันที่เริ่ม,วันที่สิ้นสุด,เวลาเริ่ม,เวลาสิ้นสุด,หมายเหตุ';
-const SAMPLE='RQ79/2569,โคมลอย,สมชาย ขายขำ,วัดฝั่งหมิ่น,ลวงเหนือ,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,';
+RQ79/2569,โคมลอย,โสภา ตาใจ,"โสภา ตาใจ / อรุณ ใสญาณส์",วัดฝั่งหมิ่น,ลวงเหนือ,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,`;
+const HDR='เลขที่คำขอ,ชนิด,ผู้ขอใบอนุญาต,ผู้จัดกิจกรรม,สถานที่,ตำบล,อำเภอ,จังหวัด,ละติจูด,ลองจิจูด,องศาละติจูด,องศาลองจิจูด,เส้นผ่านศูนย์กลาง(นิ้ว),ความสูง(ฟุต),รัศมี(NM),จำนวน,น้ำหนัก,วันที่เริ่ม,วันที่สิ้นสุด,เวลาเริ่ม,เวลาสิ้นสุด,หมายเหตุ';
+const SAMPLE='RQ79/2569,โคมลอย,โสภา ตาใจ,"โสภา ตาใจ / อรุณ ใสญาณส์",วัดฝั่งหมิ่น,ลวงเหนือ,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,';
 const TYPES=['โคมลอย','โคมไฟ','โคมควัน','พลุ','บั้งไฟ','ตะไล'],MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const th2ar=s=>s.replace(/[๐-๙]/g,c=>c.charCodeAt(0)-3664);
 const sx=v=>th2ar(String(v??'')).replace(/[<>"]/g,'').trim();
 const msg=s=>$('msg').innerHTML=s;
 const rf=(()=>{let t;return()=>{clearTimeout(t);t=setTimeout(refresh,200)}})();
 const nz=s=>th2ar(String(s??'')).toLowerCase().replace(/\u0E4D\u0E32/g,'\u0E33').replace(/\(.*?\)|\[.*?\]/g,'').replace(/[^a-z0-9ก-๙]/g,'');
-const AL={id:['เลขที่คำขอ','เลขที่','เลขคำขอ','id','rq','รหัส','รหัสคำขอ'],type:['ชนิด','ประเภท','type','ชนิดวัตถุ'],name:['ผู้ขอ','ชื่อผู้ขอ','ชื่อ','applicant','name'],place:['สถานที่','พื้นที่','สถานที่จุด','place','location'],tambon:['ตำบล','แขวง','tambon','subdistrict'],amphoe:['อำเภอ','เขต','amphoe','district'],prov:['จังหวัด','province'],lat:['ละติจูด','lat','latitude'],lng:['ลองจิจูด','ลองติจูด','lng','lon','long','longitude'],coord:['พิกัด','latlng','coordinates','coord'],dmsLat:['องศาละติจูด','dmslat','latdms'],dmsLng:['องศาลองจิจูด','dmslng','lngdms','londms'],dia:['เส้นผ่านศูนย์กลาง','ขนาด','diameter','dia'],ft:['ความสูง','height','altitude'],rad:['รัศมี','radius'],qty:['จำนวน','quantity','qty'],wt:['น้ำหนัก','weight'],d1:['วันที่เริ่ม','วันที่จุด','วันที่','date','datestart','startdate'],d2:['วันที่สิ้นสุด','dateend','enddate'],t1:['เวลาเริ่ม','เวลา','time','timestart'],t2:['เวลาสิ้นสุด','timeend'],note:['หมายเหตุ','note','notes','remark']};
+const AL={id:['เลขที่คำขอ','เลขที่','เลขคำขอ','id','rq','รหัส','รหัสคำขอ'],type:['ชนิด','ประเภท','type','ชนิดวัตถุ'],name:['ผู้ขอใบอนุญาต','ผู้ขอ','ชื่อผู้ขอ','ชื่อ','applicant','name'],org:['ผู้จัดกิจกรรม','ผู้ประกอบการ','organizer','org'],place:['สถานที่','พื้นที่','สถานที่จุด','place','location'],tambon:['ตำบล','แขวง','tambon','subdistrict'],amphoe:['อำเภอ','เขต','amphoe','district'],prov:['จังหวัด','province'],lat:['ละติจูด','lat','latitude'],lng:['ลองจิจูด','ลองติจูด','lng','lon','long','longitude'],coord:['พิกัด','latlng','coordinates','coord'],dmsLat:['องศาละติจูด','dmslat','latdms'],dmsLng:['องศาลองจิจูด','dmslng','lngdms','londms'],dia:['เส้นผ่านศูนย์กลาง','ขนาด','diameter','dia'],ft:['ความสูง','height','altitude'],rad:['รัศมี','radius'],qty:['จำนวน','quantity','qty'],wt:['น้ำหนัก','weight'],d1:['วันที่เริ่ม','วันที่จุด','วันที่','date','datestart','startdate'],d2:['วันที่สิ้นสุด','dateend','enddate'],t1:['เวลาเริ่ม','เวลา','time','timestart'],t2:['เวลาสิ้นสุด','timeend'],note:['หมายเหตุ','note','notes','remark']};
 const AN={};for(const k in AL)AN[k]=AL[k].map(nz);
 function match(h){const n=nz(h);if(!n)return null;for(const k in AN)if(AN[k].includes(n))return k;
  let b=null,l=0;for(const k in AN)for(const a of AN[k])if(a.length>=3&&n.includes(a)&&a.length>l){b=k;l=a.length}return b}
@@ -219,7 +223,7 @@ function mkRec(o,hint,extra){const w=[];let lat=null,lng=null;
  const date=d1?(d2&&d2!==d1?thD(d1)+' – '+thD(d2):thD(d1)):sx(o.d1);
  if(sx(o.note))w.push('หมายเหตุ: '+sx(o.note));
  const q=num(o.qty);
- return{rec:{id:sx(o.id)||'-',type,cat:catOf(type),name:sx(o.name),place:sx(o.place),tambon:sx(o.tambon),amphoe:sx(o.amphoe),prov:sx(o.prov),lat,lng,dIn,ft,rNM,qty:q==null?'':q,wt:sx(o.wt),date,d1:d1||'',d2:d2||'',t1,t2,time:t1&&t2?t1+'-'+t2:t1,warn:w.join('; '),extra}}}
+ return{rec:{id:sx(o.id)||'-',type,cat:catOf(type),name:sx(o.name),org:sx(o.org),place:sx(o.place),tambon:sx(o.tambon),amphoe:sx(o.amphoe),prov:sx(o.prov),lat,lng,dIn,ft,rNM,qty:q==null?'':q,wt:sx(o.wt),date,d1:d1||'',d2:d2||'',t1,t2,time:t1&&t2?t1+'-'+t2:t1,warn:w.join('; '),extra}}}
 function put(r,rep){if(recs.some(x=>x.id===r.id&&Math.abs(x.lat-r.lat)<1e-7&&Math.abs(x.lng-r.lng)<1e-7))rep.dup++;else{recs.push(r);rep.ok++;if(r.warn)rep.warn++}}
 function procRows(rows,src,rep){
  let hi=-1,best=1;rows.slice(0,10).forEach((r,i)=>{const c=r.filter(x=>match(x)).length;if(c>best){best=c;hi=i}});
@@ -260,7 +264,7 @@ $('drop').ondragover=e=>{e.preventDefault();$('drop').classList.add('over')};$('
 $('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('over');importFiles(e.dataTransfer.files)};
 // ---- export / reset / geocode
 const dl=(n,t,m)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-$('csv').onclick=()=>dl('fireworks.csv','\ufeff'+HDR+'\n'+view().map(r=>[r.id,r.type,r.name,r.place,r.tambon,r.amphoe,r.prov,r.lat,r.lng,'','',r.dIn==null?'':f1(r.dIn),r.ft??'',r.rNM==null?'':+r.rNM.toFixed(3),r.qty,r.wt,r.d1||r.date,r.d2||r.d1||r.date,r.t1||'',r.t2||'',''].map(x=>`"${String(x??'').replace(/"/g,'""')}"`).join(',')).join('\n'),'text/csv');
+$('csv').onclick=()=>dl('fireworks.csv','\ufeff'+HDR+'\n'+view().map(r=>[r.id,r.type,r.name,r.org||'',r.place,r.tambon,r.amphoe,r.prov,r.lat,r.lng,'','',r.dIn==null?'':f1(r.dIn),r.ft??'',r.rNM==null?'':+r.rNM.toFixed(3),r.qty,r.wt,r.d1||r.date,r.d2||r.d1||r.date,r.t1||'',r.t2||'',''].map(x=>`"${String(x??'').replace(/"/g,'""')}"`).join(',')).join('\n'),'text/csv');
 $('json').onclick=()=>dl('fireworks.json',JSON.stringify(recs,null,1),'application/json');
 $('reset').onclick=()=>{if(confirm('ล้างข้อมูลทั้งหมดเพื่อเริ่มชุดใหม่? (ควรส่งออก JSON ไว้ก่อน)')){recs=[];hid.clear();offD.clear();refresh()}};
 $('geo').onclick=async()=>{const b=$('geo'),C={};b.disabled=true;let i=0;
