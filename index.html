@@ -42,17 +42,21 @@ body.dark input,body.dark select,body.dark textarea{background:#0f172a;color:#e2
 body.dark dialog{background:#1e293b;border-color:#334155;color:#e2e8f0}
 body.dark a{color:#60a5fa}
 body.dark .warn-row{background:#422006}
+#pasteBtn{background:#16a34a;color:#fff;border-color:#15803d}#pasteBtn:hover{background:#22c55e;border-color:#16a34a}
+#helpBtn{background:#f97316;color:#1e3a5f;border-color:#ea580c;font-weight:600}#helpBtn:hover{background:#fdba74;border-color:#f97316}
 </style></head><body>
 <aside>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h1 style="margin:0">🗺️ รวมการจุดบั้งไฟ / ตะไล / พลุ / โคม ทุกอย่างบนโลกใบนี้</h1><button id="darkBtn" title="สลับ Dark/Light Mode" style="margin:0;padding:4px 8px;font-size:15px">🌙</button></div>
 <div class="drop" id="drop">ลากไฟล์ <b>CSV / Excel</b> มาวางที่นี่<br>หรือคลิกเลือกไฟล์<br>(หลายไฟล์ได้+.csv .xlsx .xls .json)<input id="file" type="file" accept=".csv,.xlsx,.xlsm,.xls,.json,.txt" multiple hidden></div>
 <textarea id="paste" rows="3" placeholder="วางตารางที่ได้ AI หรือ คัดลอกจาก Excel " style="width:100%;margin-top:6px;padding:6px;font:12px monospace"></textarea>
-<button id="pasteBtn">นำเข้าข้อความที่วาง</button><button id="helpBtn">📋 วิธีเตรียมข้อมูล + Prompt</button>
+<button id="pasteBtn">นำเข้าตารางจาก AI</button><button id="helpBtn">📋 วิธีเตรียมข้อมูล + Prompt</button>
 <div id="msg"></div>
 <h3>จัดการข้อมูล</h3>
 <button id="add">+ เพิ่มคำขอ</button><button id="geo">ตรวจสอบ ตำบล อำเภอ จังหวัด จากพิกัด</button><button id="csv">ส่งออก CSV</button><button id="json">ส่งออก JSON</button><button id="reset">ล้างคำขอทั้งหมด</button>
 <h3>กรองชนิด</h3><div id="chips"></div>
 <h3>กรองวันที่ <a href="#" id="dAll" style="font-weight:400">ทั้งหมด</a> · <a href="#" id="dNone" style="font-weight:400">ไม่เลือกทั้งหมด</a></h3><div id="dchips" style="max-height:140px;overflow:auto"></div>
+<h3>กรองเวลา <a href="#" id="tClr" style="font-weight:400">ล้าง</a></h3>
+<div style="display:flex;gap:6px;align-items:center;font-size:12px"><span>ตั้งแต่</span><input id="tFrom" type="time" style="width:95px;padding:3px"><span>ถึง</span><input id="tTo" type="time" style="width:95px;padding:3px"></div>
 <h3>คำขอบนแผนที่ <a href="#" id="vAll" style="font-weight:400">แสดงทั้งหมด</a> · <a href="#" id="vNone" style="font-weight:400">ซ่อนทั้งหมด</a></h3><div style="font-size:11px;color:#64748b">ติ๊กช่องหน้าแถวในตารางเพื่อแสดง/ซ่อนทีละคำขอ</div>
 <input id="q" placeholder="ค้นหา ชื่อ/สถานที่/อำเภอ..." style="width:100%;padding:6px;margin:6px 0">
 <label class="chip"><input type="checkbox" id="showR" checked> แสดงรัศมี</label>
@@ -98,19 +102,19 @@ const key=r=>r.id+'|'+r.lat;
 const _dc=new WeakMap();
 function datesOf(r){if(_dc.has(r))return _dc.get(r);if(!r.d1){_dc.set(r,[]);return[]}const o=[];let d=new Date(r.d1+'T00:00:00Z');const e=new Date((r.d2||r.d1)+'T00:00:00Z');for(let i=0;i<60&&d<=e;i++){o.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5)}_dc.set(r,o);return o}
 const pop=r=>`<b>${r.id}</b> · ${r.type}<br>${r.name}<br>📍 ${r.place}<br>ต.${r.tambon||'-'} อ.${r.amphoe||'-'} จ.${r.prov||'-'}<br>Ø ${f1(r.dIn,1)} นิ้ว · สูง ${r.ft??'-'} ft · รัศมี ${f1(r.rNM)} NM<br>${r.qty??''} ชิ้น · ${r.date||''} ${r.time||''}<br>${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}${r.extra?Object.entries(r.extra).map(([k,v])=>`<br>${k}: ${v}`).join(''):''}${r.warn?`<br>⚠️ ${r.warn}`:''}<br><button onclick="circAt(${r.lat},${r.lng},${r.rNM||''})">⭕ วัดวงกลมรอบจุดนี้</button>`;
-function view(){const q=$('q').value.trim();return recs.filter(r=>{const ds=datesOf(r);return !off.has(r.cat)&&(!ds.length||ds.some(d=>!offD.has(d)))}).filter(r=>(!q||[r.id,r.name,r.place,r.tambon,r.amphoe,r.prov,r.type].join(' ').includes(q)))}
+function view(){const q=$('q').value.trim(),tf=$('tFrom').value,tt=$('tTo').value;return recs.filter(r=>{const ds=datesOf(r);if(off.has(r.cat))return false;if(ds.length&&!ds.some(d=>!offD.has(d)))return false;if(tf&&r.t1&&r.t1<tf)return false;if(tt&&r.t1&&r.t1>tt)return false;return !q||[r.id,r.name,r.place,r.tambon,r.amphoe,r.prov,r.type].join(' ').includes(q)})}
 function refresh(){
  const v=view();lay.clearLayers();mk_={};
  v.forEach(r=>{if(hid.has(key(r)))return;const c=CAT[r.cat]||'#555';
-  if($('showR').checked&&r.rNM)L.circle([r.lat,r.lng],{radius:r.rNM*NM,color:c,weight:1,fillOpacity:.06,interactive:false}).addTo(lay);
+  if($('showR').checked&&r.rNM)L.circle([r.lat,r.lng],{radius:r.rNM*NM,color:c,weight:2.5,fillOpacity:.08,interactive:false}).addTo(lay);
   mk_[key(r)]=L.circleMarker([r.lat,r.lng],{radius:8,color:'#fff',weight:2,fillColor:c,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop(r)).bindTooltip(r.type+' · '+r.place).addTo(lay)});
  $('chips').innerHTML=Object.keys(CAT).map(k=>`<label class="chip"><input type="checkbox" data-c="${k}" ${off.has(k)?'':'checked'}><span class="dot" style="background:${CAT[k]}"></span>${k==='โคม'?'โคมลอย, โคมไฟ, โคมควัน':k} (${recs.filter(r=>r.cat===k).length})</label>`).join('');
  const cnt={};recs.forEach(r=>datesOf(r).forEach(d=>cnt[d]=(cnt[d]||0)+1));
  $('dchips').innerHTML=Object.keys(cnt).sort().map(d=>`<label class="chip"><input type="checkbox" data-dt="${d}" ${offD.has(d)?'':'checked'}>${thD(d)} (${cnt[d]})</label>`).join('')||'<span style="font-size:12px;color:#94a3b8">ยังไม่มีข้อมูลวันที่</span>';
- const cols=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอ'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['lat','พิกัด']];
+ const cols=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอ'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['time','เวลา'],['lat','พิกัด']];
  if(sortK)v.sort((a,b)=>(a[sortK]>b[sortK]?1:-1)*sortD);
  const allOn=v.length&&v.every(r=>!hid.has(key(r)));
- $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map(c=>`<th data-s="${c[0]}">${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':'<tr><td colspan=15 style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>')+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td><td>${r.id}</td><td>${r.type}</td><td>${r.name}</td><td>${r.place}</td><td>${r.tambon||''}</td><td>${r.amphoe||''}</td><td>${r.prov||''}</td><td class=n>${f1(r.dIn,1)}</td><td class=n>${r.ft??''}</td><td class=n>${f1(r.rNM)}</td><td class=n>${r.qty??''}</td><td>${r.date||''}</td><td>${r.lat.toFixed(5)}, ${r.lng.toFixed(5)} <a href="#" data-cp="${r.lat.toFixed(6)},${r.lng.toFixed(6)}" title="คัดลอกพิกัด">⧉</a></td><td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
+ $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map(c=>`<th data-s="${c[0]}">${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':'<tr><td colspan=15 style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>')+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td><td>${r.id}</td><td>${r.type}</td><td>${r.name}</td><td>${r.place}</td><td>${r.tambon||''}</td><td>${r.amphoe||''}</td><td>${r.prov||''}</td><td class=n>${f1(r.dIn,1)}</td><td class=n>${r.ft??''}</td><td class=n>${f1(r.rNM)}</td><td class=n>${r.qty??''}</td><td>${r.date||''}</td><td>${r.time||''}</td><td>${r.lat.toFixed(5)}, ${r.lng.toFixed(5)} <a href="#" data-cp="${r.lat.toFixed(6)},${r.lng.toFixed(6)}" title="คัดลอกพิกัด">⧉</a></td><td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
 }
 document.addEventListener('change',e=>{const d=e.target.dataset;
  if(d.dt){e.target.checked?offD.delete(d.dt):offD.add(d.dt);return refresh()}
@@ -121,6 +125,7 @@ const allDates=()=>{const o=new Set();recs.forEach(r=>datesOf(r).forEach(d=>o.ad
 $('dAll').onclick=e=>{e.preventDefault();offD.clear();refresh()};$('dNone').onclick=e=>{e.preventDefault();allDates().forEach(d=>offD.add(d));refresh()};
 $('vAll').onclick=e=>{e.preventDefault();hid.clear();refresh()};$('vNone').onclick=e=>{e.preventDefault();view().forEach(r=>hid.add(key(r)));refresh()};
 $('q').oninput=()=>rf();$('showR').onchange=refresh;
+$('tFrom').oninput=$('tTo').oninput=()=>rf();$('tClr').onclick=e=>{e.preventDefault();$('tFrom').value='';$('tTo').value='';refresh()};
 $('tbl').onclick=e=>{const t=e.target,k=t.dataset.e||t.dataset.d;
  if(t.dataset.cp!=null){e.preventDefault();navigator.clipboard?.writeText(t.dataset.cp).catch(()=>{});const p=t.textContent;t.textContent='✓';setTimeout(()=>t.textContent=p,1500);return}
  if(t.dataset.s){sortD=sortK===t.dataset.s?-sortD:1;sortK=t.dataset.s;return refresh()}
