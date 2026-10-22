@@ -266,7 +266,7 @@ $('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('over');impor
 const dl=(n,t,m)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('csv').onclick=()=>dl('fireworks.csv','\ufeff'+HDR+'\n'+view().map(r=>[r.id,r.type,r.name,r.org||'',r.place,r.tambon,r.amphoe,r.prov,r.lat,r.lng,'','',r.dIn==null?'':f1(r.dIn),r.ft??'',r.rNM==null?'':+r.rNM.toFixed(3),r.qty,r.wt,r.d1||r.date,r.d2||r.d1||r.date,r.t1||'',r.t2||'',''].map(x=>`"${String(x??'').replace(/"/g,'""')}"`).join(',')).join('\n'),'text/csv');
 $('json').onclick=()=>dl('fireworks.json',JSON.stringify(recs,null,1),'application/json');
-$('reset').onclick=()=>{if(confirm('ล้างข้อมูลทั้งหมดเพื่อเริ่มชุดใหม่? (ควรส่งออก JSON ไว้ก่อน)')){recs=[];hid.clear();offD.clear();refresh()}};
+$('reset').onclick=()=>{if(confirm('ล้างข้อมูลทั้งหมดเพื่อเริ่มชุดใหม่? (ควรส่งออก JSON ไว้ก่อน)')){recs=[];hid.clear();offD.clear();msg('');refresh()}};
 $('geo').onclick=async()=>{const b=$('geo'),C={};b.disabled=true;let i=0;
  for(const r of recs){b.textContent=`ตรวจ ${++i}/${recs.length}`;const k=r.lat.toFixed(3)+','+r.lng.toFixed(3);
   if(C[k]){Object.assign(r,C[k]);continue}
@@ -306,5 +306,57 @@ window.circAt=(a,b,r)=>{circ(a,b,r||+$('rIn').value||1);map.closePopup()};
 $('clr').onclick=()=>{shapes.forEach(l=>l.remove());shapes=[];panel()};
 panel();
 refresh();fit();
+// ---- Word export
+async function loadDocx(){if(window.docx)return;return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js';s.onload=res;s.onerror=()=>rej(new Error('โหลด docx library ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต'));document.head.appendChild(s)})}
+async function exportWord(){
+  const btn=$('wordBtn');btn.disabled=true;btn.textContent='⏳ กำลังสร้าง...';
+  try{
+    await loadDocx();const D=window.docx;
+    const v=view();if(!v.length){alert('ไม่มีข้อมูลที่จะส่งออก — กรุณาตรวจสอบตัวกรอง');return}
+    const maxFt=v.reduce((m,r)=>r.ft&&+r.ft>m?+r.ft:m,0);
+    const dates=[...new Set(v.map(r=>r.d1).filter(Boolean))].sort();
+    const t1Arr=v.map(r=>r.t1).filter(Boolean).sort();
+    const t2Arr=v.map(r=>r.t2).filter(Boolean).sort().reverse();
+    const lats=v.map(r=>r.lat),lngs=v.map(r=>r.lng);
+    const cLat=(Math.min(...lats)+Math.max(...lats))/2,cLng=(Math.min(...lngs)+Math.max(...lngs))/2;
+    let encR=0;v.forEach(r=>{const d=Math.sqrt(Math.pow((r.lat-cLat)*60,2)+Math.pow((r.lng-cLng)*60*Math.cos(cLat*Math.PI/180),2))+(r.rNM||0);if(d>encR)encR=d});
+    const dateStr=dates.length?(dates.length===1?thD(dates[0]):`${thD(dates[0])} – ${thD(dates[dates.length-1])}`):'-';
+    const timeStr=t1Arr.length?(t2Arr.length?`${t1Arr[0]}-${t2Arr[0]}`:t1Arr[0]):'-';
+    const fn='Angsana New';
+    const mkT=(t,bold,sz,clr)=>new D.TextRun({text:String(t??''),font:fn,size:(sz||14)*2,bold:!!bold,...(clr?{color:clr}:{})});
+    const mkP=(t,bold,sz)=>new D.Paragraph({children:[mkT(t,bold,sz)]});
+    const mkH=h=>new D.TableCell({children:[new D.Paragraph({children:[mkT(h,true,11,'FFFFFF')],alignment:'center'})],shading:{fill:'4472C4',type:'clear',color:'auto'},margins:{top:60,bottom:60,left:80,right:80}});
+    const mkDc=(txt,ctr)=>new D.TableCell({children:[new D.Paragraph({children:[mkT(txt,false,11)],alignment:ctr?'center':'left'})],margins:{top:40,bottom:40,left:80,right:80}});
+    const COLS=['หมายเลขคำขอ','อำเภอ','จังหวัด','Ø(ซม.)','รัศมี(NM)','สูง(FT)','ชื่อผู้ขอ','เบอร์','เวลาเริ่ม','เวลาจบ'];
+    const tbl=new D.Table({width:{size:100,type:'pct'},rows:[
+      new D.TableRow({tableHeader:true,children:COLS.map(mkH)}),
+      ...v.map(r=>new D.TableRow({children:[
+        mkDc(r.id,true),mkDc(r.amphoe||''),mkDc(r.prov||''),
+        mkDc(r.dIn!=null?(r.dIn*2.54).toFixed(1):'',true),
+        mkDc(r.rNM!=null?f1(r.rNM):'',true),
+        mkDc(r.ft??'',true),
+        mkDc(r.name||''),mkDc('',true),
+        mkDc(r.t1||'',true),mkDc(r.t2||'',true)
+      ]}))
+    ]});
+    const doc=new D.Document({sections:[{
+      properties:{page:{margin:{top:720,right:720,bottom:720,left:720},size:{orientation:'landscape'}}},
+      children:[
+        mkP(`รวบ ${v.length} คำขอ`,true,22),
+        mkP(`วันที่: ${dateStr}`,false,16),
+        mkP(`เวลา: ${timeStr} น.`,false,16),
+        mkP(`ความสูง GND-${maxFt||'?'}FT AGL`,false,16),
+        mkP(`พิกัดรวมคำขอ RADIUS ${f1(encR,1)} NM CENTRE ${cLat.toFixed(6)}, ${cLng.toFixed(6)}`,false,14),
+        new D.Paragraph({}),tbl,new D.Paragraph({}),
+        mkP('พิกัดที่รวมคำขอ',true,14),
+        new D.Paragraph({children:[new D.TextRun({text:'[โปรดแทรกรูปแผนที่ที่นี่]',font:fn,size:24,color:'AAAAAA',italics:true})]})
+      ]
+    }]});
+    const blob=await D.Packer.toBlob(doc);
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`รวบคำขอ_${dates[0]||new Date().toISOString().slice(0,10)}.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }catch(e){alert('เกิดข้อผิดพลาด: '+e.message);console.error(e)}
+  finally{btn.disabled=false;btn.textContent='📄 ส่งออก Word'}
+}
+$('wordBtn').onclick=exportWord;
 (()=>{const on=()=>document.body.classList.contains('dark'),upd=()=>{$('darkBtn').textContent=on()?'☀️':'🌙';localStorage.setItem('dark',on()?'1':'0')};if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');upd();$('darkBtn').onclick=()=>{document.body.classList.toggle('dark');upd()}})();
 </script></body></html>
