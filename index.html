@@ -43,8 +43,20 @@ body.dark dialog{background:#1e293b;border-color:#334155;color:#e2e8f0}
 body.dark a{color:#60a5fa}
 body.dark .warn-row{background:#422006}
 body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)}
-#pasteBtn{background:#16a34a;color:#fff;border-color:#15803d}#pasteBtn:hover{background:#22c55e;border-color:#16a34a}
-#helpBtn{background:#f97316;color:#1e3a5f;border-color:#ea580c;font-weight:600}#helpBtn:hover{background:#fdba74;border-color:#f97316}
+#pasteBtn{background:#16a34a;color:#fff;border-color:#15803d}#pasteBtn:hover{background:#15803d;border-color:#166534}
+#helpBtn{background:#f97316;color:#1e3a5f;border-color:#ea580c;font-weight:600}#helpBtn:hover{background:#ea580c;border-color:#c2410c}
+#add{background:#2563eb;color:#fff;border-color:#1d4ed8}
+#add:hover{background:#1d4ed8;border-color:#1e40af}
+#geo{background:#a855f7;color:#fff;border-color:#9333ea}
+#geo:hover{background:#7c3aed;border-color:#6d28d9}
+#csv{background:#4ade80;color:#fff;border-color:#22c55e}
+#csv:hover{background:#16a34a;border-color:#15803d}
+#json{background:#fbbf24;color:#000;border-color:#f59e0b}
+#json:hover{background:#d97706;border-color:#b45309}
+#wordBtn{background:#38bdf8;color:#fff;border-color:#0ea5e9}
+#wordBtn:hover{background:#0284c7;border-color:#0369a1}
+#reset{background:#dc2626;color:#fff;border-color:#b91c1c}
+#reset:hover{background:#991b1b;border-color:#7f1d1d}
 </style></head><body>
 <aside>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h1 style="margin:0">🗺️ รวมการจุดบั้งไฟ / ตะไล / พลุ / โคม ทุกอย่างบนโลกใบนี้</h1><button id="darkBtn" title="สลับ Dark/Light Mode" style="margin:0;padding:4px 8px;font-size:15px">🌙</button></div>
@@ -59,9 +71,14 @@ body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)
 <h3>กรองวันที่ <a href="#" id="dAll" style="font-weight:400">ทั้งหมด</a> · <a href="#" id="dNone" style="font-weight:400">ไม่เลือกทั้งหมด</a></h3><div id="dchips" style="max-height:140px;overflow:auto"></div>
 <h3>กรองเวลา <a href="#" id="tClr" style="font-weight:400">ล้าง</a></h3>
 <div style="display:flex;gap:6px;align-items:center;font-size:12px"><span>ตั้งแต่</span><input id="tFrom" type="time" style="width:95px;padding:3px"><span>ถึง</span><input id="tTo" type="time" style="width:95px;padding:3px"></div>
+<h3>กรองพื้นที่ <a href="#" id="locClr" style="font-weight:400">ล้าง</a></h3>
+<select id="fProv" style="width:100%;padding:4px;margin-bottom:4px"><option value="">จังหวัด (ทั้งหมด)</option></select>
+<select id="fAmphoe" style="width:100%;padding:4px;margin-bottom:4px"><option value="">อำเภอ (ทั้งหมด)</option></select>
+<select id="fTambon" style="width:100%;padding:4px"><option value="">ตำบล (ทั้งหมด)</option></select>
 <h3>คำขอบนแผนที่ <a href="#" id="vAll" style="font-weight:400">แสดงทั้งหมด</a> · <a href="#" id="vNone" style="font-weight:400">ซ่อนทั้งหมด</a></h3><div style="font-size:11px;color:#64748b">ติ๊กช่องหน้าแถวในตารางเพื่อแสดง/ซ่อนทีละคำขอ</div>
 <input id="q" placeholder="ค้นหา ชื่อ/สถานที่/อำเภอ..." style="width:100%;padding:6px;margin:6px 0">
 <label class="chip"><input type="checkbox" id="showR" checked> แสดงรัศมี</label>
+<button id="satBtn">🛰️ Satellite</button><button id="dmsBtn">📐 DDMMSS</button>
 <h3>เครื่องมือวัด (หน่วย NM)</h3>
 <div style="font-size:12px;color:#475569;margin-bottom:6px">สามารถใช้แถบเครื่องมือมุมซ้ายบนของแผนที่ <br>วาดเส้น / Polygon / สี่เหลี่ยม / วงกลม </div>
 <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px"><input id="rIn" type="number" step="any" value="5" style="width:70px;padding:5px"> NM <button id="rBtn" style="margin:0">Quick Circle <BR> (คลิกแผนที่)</button></div>
@@ -94,17 +111,23 @@ body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)
 const $=i=>document.getElementById(i),NM=1852,CAT={'โคม':'#e67e22','พลุ':'#8e44ad','บั้งไฟ':'#c0392b','ตะไล':'#16a085','อื่นๆ':'#64748b'};
 const catOf=t=>/โคม/.test(t)?'โคม':(CAT[t]?t:'อื่นๆ'),toIn=(v,u)=>/ซม|cm/i.test(u)?v/2.54:/เมตร|ม\./.test(u)?v*39.3701:v;
 const f1=(x,d=2)=>x==null||isNaN(x)?'-':(+x).toFixed(d);
+let dmsFmt=false;
+const toDMS=(deg,isLat)=>{const a=Math.abs(deg),d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60,dir=isLat?(deg>=0?'N':'S'):(deg>=0?'E':'W'),dd=String(d).padStart(isLat?2:3,'0');return`${dd}${String(m).padStart(2,'0')}${s.toFixed(2).padStart(5,'0')}${dir}`};
+const fmtLL=(lat,lng,dp=6)=>dmsFmt?`${toDMS(lat,true)}${toDMS(lng,false)}`:`${lat.toFixed(dp)}, ${lng.toFixed(dp)}`;
 let recs=[];
 const fit=()=>{if(recs.length)map.fitBounds(recs.map(r=>[r.lat,r.lng]),{padding:[40,40],maxZoom:15})};
-const map=L.map('map').setView([18.86,99.1],11);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+const map=L.map('map').setView([13.0,101.5],6);
+const osmTile=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+const satTile=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri World Imagery'});
+const labelTile=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri',opacity:.9});
+osmTile.addTo(map);
 L.control.scale({imperial:false,metric:false}).addTo(map);
 const lay=L.layerGroup().addTo(map);let mk_={},off=new Set(),offD=new Set(),hid=new Set(),sortK=null,sortD=1;
 const key=r=>r.id+'|'+r.lat;
 const _dc=new WeakMap();
 function datesOf(r){if(_dc.has(r))return _dc.get(r);if(!r.d1){_dc.set(r,[]);return[]}const o=[];let d=new Date(r.d1+'T00:00:00Z');const e=new Date((r.d2||r.d1)+'T00:00:00Z');for(let i=0;i<60&&d<=e;i++){o.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5)}_dc.set(r,o);return o}
-const pop=r=>`<b>${r.id}</b> · ${r.type}<br>👤 ${r.name}${r.org?`<br>🏢 ${r.org}`:''}<br>📍 ${r.place}<br>ต.${r.tambon||'-'} อ.${r.amphoe||'-'} จ.${r.prov||'-'}<br>Ø ${f1(r.dIn,1)} นิ้ว · สูง ${r.ft??'-'} ft · รัศมี ${f1(r.rNM)} NM<br>${r.qty??''} ชิ้น · ${r.date||''} ${r.time||''}<br>${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}${r.extra?Object.entries(r.extra).map(([k,v])=>`<br>${k}: ${v}`).join(''):''}${r.warn?`<br>⚠️ ${r.warn}`:''}<br><button onclick="circAt(${r.lat},${r.lng},${r.rNM||''})">⭕ วัดวงกลมรอบจุดนี้</button>`;
-function view(){const q=$('q').value.trim(),tf=$('tFrom').value,tt=$('tTo').value;return recs.filter(r=>{const ds=datesOf(r);if(off.has(r.cat))return false;if(ds.length&&!ds.some(d=>!offD.has(d)))return false;if(tf&&r.t1&&r.t1<tf)return false;if(tt&&r.t1&&r.t1>tt)return false;return !q||[r.id,r.name,r.place,r.tambon,r.amphoe,r.prov,r.type].join(' ').includes(q)})}
+const pop=r=>`<b>${r.id}</b> · ${r.type}<br>👤 ${r.name}${r.org?`<br>🏢 ${r.org}`:''}<br>📍 ${r.place}<br>ต.${r.tambon||'-'} อ.${r.amphoe||'-'} จ.${r.prov||'-'}<br>Ø ${f1(r.dIn,1)} นิ้ว · สูง ${r.ft??'-'} ft · รัศมี ${f1(r.rNM)} NM<br>${r.qty??''} ชิ้น · ${r.date||''} ${r.time||''}<br>${fmtLL(r.lat,r.lng,6)}${r.extra?Object.entries(r.extra).map(([k,v])=>`<br>${k}: ${v}`).join(''):''}${r.warn?`<br>⚠️ ${r.warn}`:''}<br><a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" style="font-size:12px">📍 เปิดใน Google Maps</a> · <button onclick="circAt(${r.lat},${r.lng},${r.rNM||''})">⭕ วัดวงกลมรอบจุดนี้</button>`;
+function view(){const q=$('q').value.trim(),tf=$('tFrom').value,tt=$('tTo').value,fp=$('fProv').value,fa=$('fAmphoe').value,ftb=$('fTambon').value;return recs.filter(r=>{const ds=datesOf(r);if(off.has(r.cat))return false;if(ds.length&&!ds.some(d=>!offD.has(d)))return false;if(tf&&r.t1&&r.t1<tf)return false;if(tt&&r.t1&&r.t1>tt)return false;if(fp&&r.prov!==fp)return false;if(fa&&r.amphoe!==fa)return false;if(ftb&&r.tambon!==ftb)return false;return !q||[r.id,r.name,r.place,r.tambon,r.amphoe,r.prov,r.type].join(' ').includes(q)})}
 function refresh(){
  const v=view();lay.clearLayers();mk_={};
  v.forEach(r=>{if(hid.has(key(r)))return;const c=CAT[r.cat]||'#555';
@@ -113,10 +136,17 @@ function refresh(){
  $('chips').innerHTML=Object.keys(CAT).map(k=>`<label class="chip"><input type="checkbox" data-c="${k}" ${off.has(k)?'':'checked'}><span class="dot" style="background:${CAT[k]}"></span>${k==='โคม'?'โคมลอย, โคมไฟ, โคมควัน':k} (${recs.filter(r=>r.cat===k).length})</label>`).join('');
  const cnt={};recs.forEach(r=>datesOf(r).forEach(d=>cnt[d]=(cnt[d]||0)+1));
  $('dchips').innerHTML=Object.keys(cnt).sort().map(d=>`<label class="chip"><input type="checkbox" data-dt="${d}" ${offD.has(d)?'':'checked'}>${thD(d)} (${cnt[d]})</label>`).join('')||'<span style="font-size:12px;color:#94a3b8">ยังไม่มีข้อมูลวันที่</span>';
+ {const selP=$('fProv').value,selA=$('fAmphoe').value,selTb=$('fTambon').value;
+  const provs=[...new Set(recs.map(r=>r.prov).filter(Boolean))].sort();
+  const amphs=[...new Set(recs.filter(r=>!selP||r.prov===selP).map(r=>r.amphoe).filter(Boolean))].sort();
+  const tambs=[...new Set(recs.filter(r=>(!selP||r.prov===selP)&&(!selA||r.amphoe===selA)).map(r=>r.tambon).filter(Boolean))].sort();
+  $('fProv').innerHTML='<option value="">จังหวัด (ทั้งหมด)</option>'+provs.map(p=>`<option value="${p}"${p===selP?' selected':''}>${p}</option>`).join('');
+  $('fAmphoe').innerHTML='<option value="">อำเภอ (ทั้งหมด)</option>'+amphs.map(a=>`<option value="${a}"${a===selA?' selected':''}>${a}</option>`).join('');
+  $('fTambon').innerHTML='<option value="">ตำบล (ทั้งหมด)</option>'+tambs.map(t=>`<option value="${t}"${t===selTb?' selected':''}>${t}</option>`).join('');}
  const cols=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอใบอนุญาต'],['org','ผู้จัดกิจกรรม'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['time','เวลา'],['lat','พิกัด']];
  if(sortK)v.sort((a,b)=>(a[sortK]>b[sortK]?1:-1)*sortD);
  const allOn=v.length&&v.every(r=>!hid.has(key(r)));
- $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map(c=>`<th data-s="${c[0]}">${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':'<tr><td colspan=15 style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>')+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td><td>${r.id}</td><td>${r.type}</td><td>${r.name}</td><td>${r.org||''}</td><td>${r.place}</td><td>${r.tambon||''}</td><td>${r.amphoe||''}</td><td>${r.prov||''}</td><td class=n>${f1(r.dIn,1)}</td><td class=n>${r.ft??''}</td><td class=n>${f1(r.rNM)}</td><td class=n>${r.qty??''}</td><td>${r.date||''}</td><td>${r.time||''}</td><td>${r.lat.toFixed(5)}, ${r.lng.toFixed(5)} <a href="#" data-cp="${r.lat.toFixed(6)},${r.lng.toFixed(6)}" title="คัดลอกพิกัด">⧉</a></td><td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
+ $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map(c=>`<th data-s="${c[0]}">${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':'<tr><td colspan=15 style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>')+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td><td>${r.id}</td><td>${r.type}</td><td>${r.name}</td><td>${r.org||''}</td><td>${r.place}</td><td>${r.tambon||''}</td><td>${r.amphoe||''}</td><td>${r.prov||''}</td><td class=n>${f1(r.dIn,1)}</td><td class=n>${r.ft??''}</td><td class=n>${f1(r.rNM)}</td><td class=n>${r.qty??''}</td><td>${r.date||''}</td><td>${r.time||''}</td><td>${fmtLL(r.lat,r.lng,5)} <a href="#" data-cp="${dmsFmt?toDMS(r.lat,true)+' '+toDMS(r.lng,false):r.lat.toFixed(6)+','+r.lng.toFixed(6)}" title="คัดลอกพิกัด">⧉</a></td><td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
 }
 document.addEventListener('change',e=>{const d=e.target.dataset;
  if(d.dt){e.target.checked?offD.delete(d.dt):offD.add(d.dt);return refresh()}
@@ -127,7 +157,11 @@ const allDates=()=>{const o=new Set();recs.forEach(r=>datesOf(r).forEach(d=>o.ad
 $('dAll').onclick=e=>{e.preventDefault();offD.clear();refresh()};$('dNone').onclick=e=>{e.preventDefault();allDates().forEach(d=>offD.add(d));refresh()};
 $('vAll').onclick=e=>{e.preventDefault();hid.clear();refresh()};$('vNone').onclick=e=>{e.preventDefault();view().forEach(r=>hid.add(key(r)));refresh()};
 $('q').oninput=()=>rf();$('showR').onchange=refresh;
+$('dmsBtn').onclick=()=>{dmsFmt=!dmsFmt;$('dmsBtn').classList.toggle('on',dmsFmt);refresh()};
+$('satBtn').onclick=()=>{if(map.hasLayer(satTile)){map.removeLayer(satTile);map.removeLayer(labelTile);osmTile.addTo(map);$('satBtn').textContent='🛰️ Satellite'}else{map.removeLayer(osmTile);satTile.addTo(map);labelTile.addTo(map);$('satBtn').textContent='🗺️ OSM'}};
 $('tFrom').oninput=$('tTo').oninput=()=>rf();$('tClr').onclick=e=>{e.preventDefault();$('tFrom').value='';$('tTo').value='';refresh()};
+$('fProv').onchange=$('fAmphoe').onchange=$('fTambon').onchange=()=>rf();
+$('locClr').onclick=e=>{e.preventDefault();$('fProv').value='';$('fAmphoe').value='';$('fTambon').value='';refresh()};
 $('tbl').onclick=e=>{const t=e.target,k=t.dataset.e||t.dataset.d;
  if(t.dataset.cp!=null){e.preventDefault();navigator.clipboard?.writeText(t.dataset.cp).catch(()=>{});const p=t.textContent;t.textContent='✓';setTimeout(()=>t.textContent=p,1500);return}
  if(t.dataset.s){sortD=sortK===t.dataset.s?-sortD:1;sortK=t.dataset.s;return refresh()}
@@ -136,9 +170,9 @@ $('tbl').onclick=e=>{const t=e.target,k=t.dataset.e||t.dataset.d;
  if(t.tagName==='INPUT')return;const tr=t.closest('tr[data-k]');if(tr&&mk_[tr.dataset.k]){const m=mk_[tr.dataset.k];map.flyTo(m.getLatLng(),15);m.openPopup()}};
 // ---- add/edit
 let cur=null;
-function edit(r){cur=r;const f=$('f'),d=r||{type:'โคมลอย',dIn:'',ft:6000,rNM:10};
- f.id.value=d.id||'';f.type.value=d.type;f.name.value=d.name||'';f.org.value=d.org||'';f.place.value=d.place||'';f.tambon.value=d.tambon||'';f.amphoe.value=d.amphoe||'ดอยสะเก็ด';f.prov.value=d.prov||'เชียงใหม่';
- f.lat.value=d.lat??'';f.lng.value=d.lng??'';f.dia.value=d.dIn===''?'':f1(d.dIn,2);f.du.value='นิ้ว';f.ft.value=d.ft??'';f.rad.value=f1(d.rNM,3);f.qty.value=d.qty??'';f.date.value=d.date||'';$('dlg').showModal()}
+function edit(r){cur=r;const f=$('f'),d=r||{type:'โคมลอย',dIn:'',ft:null,rNM:null};
+ f.id.value=d.id||'';f.type.value=d.type;f.name.value=d.name||'';f.org.value=d.org||'';f.place.value=d.place||'';f.tambon.value=d.tambon||'';f.amphoe.value=d.amphoe||'';f.prov.value=d.prov||'';
+ f.lat.value=d.lat??'';f.lng.value=d.lng??'';f.dia.value=d.dIn==null||d.dIn===''?'':f1(d.dIn,2);f.du.value='นิ้ว';f.ft.value=d.ft??'';f.rad.value=d.rNM!=null?f1(d.rNM,3):'';f.qty.value=d.qty??'';f.date.value=d.date||'';$('dlg').showModal()}
 $('add').onclick=()=>edit(null);
 $('f').onsubmit=e=>{if(e.submitter.value!=='ok')return;const f=e.target,o={id:f.id.value,type:f.type.value,cat:catOf(f.type.value),name:f.name.value,org:f.org.value,place:f.place.value,tambon:f.tambon.value,amphoe:f.amphoe.value,prov:f.prov.value,lat:+f.lat.value,lng:+f.lng.value,dIn:toIn(+f.dia.value,f.du.value),ft:f.ft.value?+f.ft.value:null,rNM:+f.rad.value,qty:f.qty.value,date:f.date.value,time:cur?.time||'',wt:cur?.wt||'',warn:''};
  if(cur){_dc.delete(cur);Object.assign(cur,o)}else recs.push(o);refresh()};
