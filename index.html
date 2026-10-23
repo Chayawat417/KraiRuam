@@ -11,7 +11,11 @@
 *{box-sizing:border-box}body{margin:0;font:14px/1.4 "Noto Sans Thai",system-ui,sans-serif;color:#1f2937;height:100vh;display:grid;grid-template-columns:290px 1fr}
 aside{padding:12px;overflow:auto;background:#f8fafc;border-right:1px solid #e2e8f0}
 h1{font-size:16px;margin:0 0 10px}h3{font-size:12px;color:#64748b;margin:14px 0 6px;text-transform:uppercase}
-main{display:grid;grid-template-rows:1fr 38vh;min-width:0}#map{min-height:200px}
+main{display:grid;grid-template-rows:1fr 6px 38vh;min-width:0;position:relative}#map{min-height:100px}
+#resize{background:#cbd5e1;cursor:row-resize;transition:background .15s}#resize:hover,#resize.drag{background:#2563eb}
+body.dark #resize{background:#334155}body.dark #resize:hover,body.dark #resize.drag{background:#2563eb}
+#mapOv{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:6px}
+#mapOv button{margin:0;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 button,select,input{font:inherit}button{padding:6px 9px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;margin:0 4px 4px 0}
 button.on{background:#2563eb;color:#fff;border-color:#2563eb}
 button{transition:background .15s,border-color .15s}button:hover:not(.on){background:#d1fae5;border-color:#6ee7b7}
@@ -19,7 +23,7 @@ button{transition:background .15s,border-color .15s}button:hover:not(.on){backgr
 .chip{display:flex;align-items:center;gap:6px;margin:3px 0}.dot{width:12px;height:12px;border-radius:50%}
 #res{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px;min-height:44px;font-size:13px}
 #tbl{overflow:auto;border-top:1px solid #cbd5e1}table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12.5px}
-th{position:sticky;top:0;background:#f1f5f9;text-align:left;cursor:pointer;white-space:nowrap}th,td{padding:5px 8px;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+th{position:sticky;top:0;background:#f1f5f9;text-align:left;cursor:grab;white-space:nowrap;user-select:none}th:active{cursor:grabbing}th.drag{opacity:.4}th.over{box-shadow:inset 3px 0 0 #2563eb}th,td{padding:5px 8px;border-bottom:1px solid #e2e8f0;white-space:nowrap}
 tr:hover td{background:#eff6ff}td.n{text-align:right}#msg{font-size:12px;color:#b45309;margin-top:6px}
 dialog{border:1px solid #cbd5e1;border-radius:10px;width:min(440px,94vw)}dialog label{display:block;margin:6px 0;font-size:12px}dialog input,dialog select{width:100%;padding:5px}
 @media(max-width:760px){body{grid-template-columns:1fr;height:auto}main{height:100vh}}
@@ -71,6 +75,7 @@ body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)
 <h3>กรองวันที่ <a href="#" id="dAll" style="font-weight:400">ทั้งหมด</a> · <a href="#" id="dNone" style="font-weight:400">ไม่เลือกทั้งหมด</a></h3><div id="dchips" style="max-height:140px;overflow:auto"></div>
 <h3>กรองเวลา <a href="#" id="tClr" style="font-weight:400">ล้าง</a></h3>
 <div style="display:flex;gap:6px;align-items:center;font-size:12px"><span>ตั้งแต่</span><input id="tFrom" type="time" style="width:95px;padding:3px"><span>ถึง</span><input id="tTo" type="time" style="width:95px;padding:3px"></div>
+<h3>กรองความสูง (FT) <a href="#" id="hAll" style="font-weight:400">ทั้งหมด</a> · <a href="#" id="hNone" style="font-weight:400">ไม่เลือกทั้งหมด</a></h3><div id="hchips" style="max-height:120px;overflow:auto"></div>
 <h3>กรองพื้นที่ <a href="#" id="locClr" style="font-weight:400">ล้าง</a></h3>
 <select id="fProv" style="width:100%;padding:4px;margin-bottom:4px"><option value="">จังหวัด (ทั้งหมด)</option></select>
 <select id="fAmphoe" style="width:100%;padding:4px;margin-bottom:4px"><option value="">อำเภอ (ทั้งหมด)</option></select>
@@ -78,7 +83,6 @@ body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)
 <h3>คำขอบนแผนที่ <a href="#" id="vAll" style="font-weight:400">แสดงทั้งหมด</a> · <a href="#" id="vNone" style="font-weight:400">ซ่อนทั้งหมด</a></h3><div style="font-size:11px;color:#64748b">ติ๊กช่องหน้าแถวในตารางเพื่อแสดง/ซ่อนทีละคำขอ</div>
 <input id="q" placeholder="ค้นหา ชื่อ/สถานที่/อำเภอ..." style="width:100%;padding:6px;margin:6px 0">
 <label class="chip"><input type="checkbox" id="showR" checked> แสดงรัศมี</label>
-<button id="satBtn">🛰️ Satellite</button><button id="dmsBtn">📐 DDMMSS</button>
 <h3>เครื่องมือวัด (หน่วย NM)</h3>
 <div style="font-size:12px;color:#475569;margin-bottom:6px">สามารถใช้แถบเครื่องมือมุมซ้ายบนของแผนที่ <br>วาดเส้น / Polygon / สี่เหลี่ยม / วงกลม </div>
 <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px"><input id="rIn" type="number" step="any" value="5" style="width:70px;padding:5px"> NM <button id="rBtn" style="margin:0">Quick Circle <BR> (คลิกแผนที่)</button></div>
@@ -86,7 +90,7 @@ body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)
 <div id="res"></div>
 <p style="font-size:11px;color:#64748b">This is an alpha test. Please expect that bugs and glitches may be occur.</p>
 </aside>
-<main><div id="map"></div><div id="tbl"></div></main>
+<main><div id="map"></div><div id="mapOv"><button id="satBtn">🛰️ Satellite</button><button id="dmsBtn">📐 DDMMSS</button></div><div id="resize" title="ลากเพื่อปรับขนาด"></div><div id="tbl"></div></main>
 <dialog id="help" style="width:min(720px,95vw)"><form method="dialog">
 <b>วิธีเตรียมข้อมูลจาก PDF ด้วย AI</b>
 <ol style="font-size:13px;padding-left:18px"><li>กด “คัดลอก Prompt”</li><li>เปิด AI ที่ใช้ (ChatGPT / Claude / Gemini ฯลฯ) แนบไฟล์ PDF แล้ววาง Prompt</li><li>คัดลอกตาราง CSV ที่ AI ตอบ → วางในช่อง “วางตาราง” หรือบันทึกเป็นไฟล์ .csv แล้วลากเข้ามา</li><li>ตรวจแถวสีเหลือง และสุ่มเทียบกับเอกสารต้นฉบับ (โดยเฉพาะพิกัดและรัศมี)</li></ol>
@@ -122,20 +126,26 @@ const satTile=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/
 const labelTile=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri',opacity:.9});
 osmTile.addTo(map);
 L.control.scale({imperial:false,metric:false}).addTo(map);
-const lay=L.layerGroup().addTo(map);let mk_={},off=new Set(),offD=new Set(),hid=new Set(),sortK=null,sortD=1;
+const lay=L.layerGroup().addTo(map);let mk_={},off=new Set(),offD=new Set(),offH=new Set(),hid=new Set(),hidR=new Set(),sortK=null,sortD=1;
+const COLS_DEF=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอใบอนุญาต'],['org','ผู้จัดกิจกรรม'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['time','เวลา'],['lat','LAT'],['lng','LONG']];
+let cols=(()=>{try{const s=JSON.parse(localStorage.getItem('colOrder')||'[]');if(s.length===COLS_DEF.length&&s.every(k=>COLS_DEF.find(c=>c[0]===k)))return s.map(k=>COLS_DEF.find(c=>c[0]===k))}catch(e){}return[...COLS_DEF]})();
+const CELL={id:r=>`<td>${r.id}</td>`,type:r=>`<td>${r.type}</td>`,name:r=>`<td>${r.name}</td>`,org:r=>`<td>${r.org||''}</td>`,place:r=>`<td>${r.place}</td>`,tambon:r=>`<td>${r.tambon||''}</td>`,amphoe:r=>`<td>${r.amphoe||''}</td>`,prov:r=>`<td>${r.prov||''}</td>`,dIn:r=>`<td class=n>${f1(r.dIn,1)}</td>`,ft:r=>`<td class=n>${r.ft??''}</td>`,rNM:r=>`<td class=n>${f1(r.rNM)}</td>`,qty:r=>`<td class=n>${r.qty??''}</td>`,date:r=>`<td>${r.date||''}</td>`,time:r=>`<td>${r.time||''}</td>`,lat:r=>`<td class=n>${dmsFmt?toDMS(r.lat,true):r.lat.toFixed(5)} <a href="#" data-cp="${dmsFmt?toDMS(r.lat,true):r.lat.toFixed(6)}" title="คัดลอก LAT">⧉</a></td>`,lng:r=>`<td class=n>${dmsFmt?toDMS(r.lng,false):r.lng.toFixed(5)} <a href="#" data-cp="${dmsFmt?toDMS(r.lng,false):r.lng.toFixed(6)}" title="คัดลอก LONG">⧉</a></td>`};
 const key=r=>r.id+'|'+r.lat;
 const _dc=new WeakMap();
 function datesOf(r){if(_dc.has(r))return _dc.get(r);if(!r.d1){_dc.set(r,[]);return[]}const o=[];let d=new Date(r.d1+'T00:00:00Z');const e=new Date((r.d2||r.d1)+'T00:00:00Z');for(let i=0;i<60&&d<=e;i++){o.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5)}_dc.set(r,o);return o}
 const pop=r=>`<b>${r.id}</b> · ${r.type}<br>👤 ${r.name}${r.org?`<br>🏢 ${r.org}`:''}<br>📍 ${r.place}<br>ต.${r.tambon||'-'} อ.${r.amphoe||'-'} จ.${r.prov||'-'}<br>Ø ${f1(r.dIn,1)} นิ้ว · สูง ${r.ft??'-'} ft · รัศมี ${f1(r.rNM)} NM<br>${r.qty??''} ชิ้น · ${r.date||''} ${r.time||''}<br>${fmtLL(r.lat,r.lng,6)}${r.extra?Object.entries(r.extra).map(([k,v])=>`<br>${k}: ${v}`).join(''):''}${r.warn?`<br>⚠️ ${r.warn}`:''}<br><a href="https://www.google.com/maps?q=${r.lat},${r.lng}&hl=th" target="_blank" style="font-size:12px">📍 เปิดใน Google Maps</a> · <button onclick="circAt(${r.lat},${r.lng},${r.rNM||''})">⭕ วัดวงกลมรอบจุดนี้</button>`;
-function view(){const q=$('q').value.trim(),tf=$('tFrom').value,tt=$('tTo').value,fp=$('fProv').value,fa=$('fAmphoe').value,ftb=$('fTambon').value;return recs.filter(r=>{const ds=datesOf(r);if(off.has(r.cat))return false;if(ds.length&&!ds.some(d=>!offD.has(d)))return false;if(tf&&r.t1&&r.t1<tf)return false;if(tt&&r.t1&&r.t1>tt)return false;if(fp&&r.prov!==fp)return false;if(fa&&r.amphoe!==fa)return false;if(ftb&&r.tambon!==ftb)return false;return !q||[r.id,r.name,r.place,r.tambon,r.amphoe,r.prov,r.type].join(' ').includes(q)})}
+const hKey=r=>r.ft==null||r.ft===''?'(ไม่ระบุ)':String(+r.ft);
+function view(){const q=$('q').value.trim(),tf=$('tFrom').value,tt=$('tTo').value,fp=$('fProv').value,fa=$('fAmphoe').value,ftb=$('fTambon').value;return recs.filter(r=>{const ds=datesOf(r);if(off.has(r.cat))return false;if(ds.length&&!ds.some(d=>!offD.has(d)))return false;if(tf&&r.t1&&r.t1<tf)return false;if(tt&&r.t1&&r.t1>tt)return false;if(offH.has(hKey(r)))return false;if(fp&&r.prov!==fp)return false;if(fa&&r.amphoe!==fa)return false;if(ftb&&r.tambon!==ftb)return false;return !q||[r.id,r.name,r.place,r.tambon,r.amphoe,r.prov,r.type].join(' ').includes(q)})}
 function refresh(){
  const v=view();lay.clearLayers();mk_={};
  v.forEach(r=>{if(hid.has(key(r)))return;const c=CAT[r.cat]||'#555';
-  if($('showR').checked&&r.rNM)L.circle([r.lat,r.lng],{radius:r.rNM*NM,color:c,weight:2.5,fillOpacity:.08,interactive:false}).addTo(lay);
+  if($('showR').checked&&r.rNM&&!hidR.has(key(r)))L.circle([r.lat,r.lng],{radius:r.rNM*NM,color:c,weight:2.5,fillOpacity:.08,interactive:false}).addTo(lay);
   mk_[key(r)]=L.circleMarker([r.lat,r.lng],{radius:8,color:'#fff',weight:2,fillColor:c,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop(r)).bindTooltip(r.type+' · '+r.place).addTo(lay)});
  $('chips').innerHTML=Object.keys(CAT).map(k=>`<label class="chip"><input type="checkbox" data-c="${k}" ${off.has(k)?'':'checked'}><span class="dot" style="background:${CAT[k]}"></span>${k==='โคม'?'โคมลอย, โคมไฟ, โคมควัน':k} (${recs.filter(r=>r.cat===k).length})</label>`).join('');
  const cnt={};recs.forEach(r=>datesOf(r).forEach(d=>cnt[d]=(cnt[d]||0)+1));
  $('dchips').innerHTML=Object.keys(cnt).sort().map(d=>`<label class="chip"><input type="checkbox" data-dt="${d}" ${offD.has(d)?'':'checked'}>${thD(d)} (${cnt[d]})</label>`).join('')||'<span style="font-size:12px;color:#94a3b8">ยังไม่มีข้อมูลวันที่</span>';
+ const hc={};recs.forEach(r=>{const k=hKey(r);hc[k]=(hc[k]||0)+1});
+ $('hchips').innerHTML=Object.keys(hc).sort((a,b)=>a==='(ไม่ระบุ)'?1:b==='(ไม่ระบุ)'?-1:+a-+b).map(h=>`<label class="chip"><input type="checkbox" data-ht="${h}" ${offH.has(h)?'':'checked'}>${h==='(ไม่ระบุ)'?h:h+' ft'} (${hc[h]})</label>`).join('')||'<span style="font-size:12px;color:#94a3b8">ยังไม่มีข้อมูลความสูง</span>';
  {const selP=$('fProv').value,selA=$('fAmphoe').value,selTb=$('fTambon').value;
   const provs=[...new Set(recs.map(r=>r.prov).filter(Boolean))].sort();
   const amphs=[...new Set(recs.filter(r=>!selP||r.prov===selP).map(r=>r.amphoe).filter(Boolean))].sort();
@@ -143,13 +153,13 @@ function refresh(){
   $('fProv').innerHTML='<option value="">จังหวัด (ทั้งหมด)</option>'+provs.map(p=>`<option value="${p}"${p===selP?' selected':''}>${p}</option>`).join('');
   $('fAmphoe').innerHTML='<option value="">อำเภอ (ทั้งหมด)</option>'+amphs.map(a=>`<option value="${a}"${a===selA?' selected':''}>${a}</option>`).join('');
   $('fTambon').innerHTML='<option value="">ตำบล (ทั้งหมด)</option>'+tambs.map(t=>`<option value="${t}"${t===selTb?' selected':''}>${t}</option>`).join('');}
- const cols=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอใบอนุญาต'],['org','ผู้จัดกิจกรรม'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['time','เวลา'],['lat','พิกัด']];
  if(sortK)v.sort((a,b)=>(a[sortK]>b[sortK]?1:-1)*sortD);
  const allOn=v.length&&v.every(r=>!hid.has(key(r)));
- $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map(c=>`<th data-s="${c[0]}">${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':'<tr><td colspan=15 style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>')+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td><td>${r.id}</td><td>${r.type}</td><td>${r.name}</td><td>${r.org||''}</td><td>${r.place}</td><td>${r.tambon||''}</td><td>${r.amphoe||''}</td><td>${r.prov||''}</td><td class=n>${f1(r.dIn,1)}</td><td class=n>${r.ft??''}</td><td class=n>${f1(r.rNM)}</td><td class=n>${r.qty??''}</td><td>${r.date||''}</td><td>${r.time||''}</td><td>${fmtLL(r.lat,r.lng,5)} <a href="#" data-cp="${dmsFmt?toDMS(r.lat,true)+' '+toDMS(r.lng,false):r.lat.toFixed(6)+','+r.lng.toFixed(6)}" title="คัดลอกพิกัด">⧉</a></td><td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
+ $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map((c,i)=>`<th draggable="true" data-s="${c[0]}" data-ci="${i}" title="คลิกเพื่อเรียง · ลากเพื่อสลับตำแหน่ง">⋮⋮ ${c[1]}</th>`).join('')}<th></th></tr>`+(v.length?'':`<tr><td colspan=${cols.length+2} style="padding:18px;text-align:center;color:#64748b">ยังไม่มีข้อมูล — ลากไฟล์ PDF มาวางที่ช่องด้านซ้าย หรือกด + เพิ่มเอง</td></tr>`)+v.map(r=>`<tr data-k="${key(r)}" class="${r.warn?'warn-row':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td>${cols.map(c=>CELL[c[0]](r)).join('')}<td>${r.warn?`<span title="${r.warn}">⚠️</span> `:''}<a href="#" data-rt="${key(r)}" title="เปิด/ปิดรัศมี" style="opacity:${hidR.has(key(r))?.3:1}">⭕</a> <a href="#" data-e="${key(r)}">✎</a> <a href="#" data-d="${key(r)}">✕</a></td></tr>`).join('')+'</table>';
 }
 document.addEventListener('change',e=>{const d=e.target.dataset;
  if(d.dt){e.target.checked?offD.delete(d.dt):offD.add(d.dt);return refresh()}
+ if(d.ht){e.target.checked?offH.delete(d.ht):offH.add(d.ht);return refresh()}
  if(d.v){e.target.checked?hid.delete(d.v):hid.add(d.v);return refresh()}
  if(e.target.id==='allv'){view().forEach(r=>e.target.checked?hid.delete(key(r)):hid.add(key(r)));return refresh()}
  if(e.target.dataset.c){e.target.checked?off.delete(e.target.dataset.c):off.add(e.target.dataset.c);refresh()}});
@@ -157,17 +167,25 @@ const allDates=()=>{const o=new Set();recs.forEach(r=>datesOf(r).forEach(d=>o.ad
 $('dAll').onclick=e=>{e.preventDefault();offD.clear();refresh()};$('dNone').onclick=e=>{e.preventDefault();allDates().forEach(d=>offD.add(d));refresh()};
 $('vAll').onclick=e=>{e.preventDefault();hid.clear();refresh()};$('vNone').onclick=e=>{e.preventDefault();view().forEach(r=>hid.add(key(r)));refresh()};
 $('q').oninput=()=>rf();$('showR').onchange=refresh;
-$('dmsBtn').onclick=()=>{dmsFmt=!dmsFmt;$('dmsBtn').classList.toggle('on',dmsFmt);refresh()};
+$('dmsBtn').onclick=()=>{dmsFmt=!dmsFmt;$('dmsBtn').classList.toggle('on',dmsFmt);refresh();panel()};
 $('satBtn').onclick=()=>{if(map.hasLayer(satTile)){map.removeLayer(satTile);map.removeLayer(labelTile);osmTile.addTo(map);$('satBtn').textContent='🛰️ Satellite'}else{map.removeLayer(osmTile);satTile.addTo(map);labelTile.addTo(map);$('satBtn').textContent='🗺️ OSM'}};
 $('tFrom').oninput=$('tTo').oninput=()=>rf();$('tClr').onclick=e=>{e.preventDefault();$('tFrom').value='';$('tTo').value='';refresh()};
+$('hAll').onclick=e=>{e.preventDefault();offH.clear();refresh()};$('hNone').onclick=e=>{e.preventDefault();[...new Set(recs.map(hKey))].forEach(h=>offH.add(h));refresh()};
 $('fProv').onchange=$('fAmphoe').onchange=$('fTambon').onchange=()=>rf();
 $('locClr').onclick=e=>{e.preventDefault();$('fProv').value='';$('fAmphoe').value='';$('fTambon').value='';refresh()};
 $('tbl').onclick=e=>{const t=e.target,k=t.dataset.e||t.dataset.d;
  if(t.dataset.cp!=null){e.preventDefault();navigator.clipboard?.writeText(t.dataset.cp).catch(()=>{});const p=t.textContent;t.textContent='✓';setTimeout(()=>t.textContent=p,1500);return}
  if(t.dataset.s){sortD=sortK===t.dataset.s?-sortD:1;sortK=t.dataset.s;return refresh()}
+ if(t.dataset.rt){e.preventDefault();hidR.has(t.dataset.rt)?hidR.delete(t.dataset.rt):hidR.add(t.dataset.rt);return refresh()}
  if(t.dataset.d){e.preventDefault();recs=recs.filter(r=>key(r)!==k);return refresh()}
  if(t.dataset.e){e.preventDefault();return edit(recs.find(r=>key(r)===k))}
  if(t.tagName==='INPUT')return;const tr=t.closest('tr[data-k]');if(tr&&mk_[tr.dataset.k]){const m=mk_[tr.dataset.k];map.flyTo(m.getLatLng(),15);m.openPopup()}};
+let dragI=null;
+$('tbl').addEventListener('dragstart',e=>{const th=e.target.closest('th[data-ci]');if(!th)return;dragI=+th.dataset.ci;th.classList.add('drag');e.dataTransfer.effectAllowed='move'});
+$('tbl').addEventListener('dragover',e=>{const th=e.target.closest('th[data-ci]');if(!th||dragI==null)return;e.preventDefault();$('tbl').querySelectorAll('th.over').forEach(x=>x.classList.remove('over'));th.classList.add('over')});
+$('tbl').addEventListener('dragleave',e=>{const th=e.target.closest('th[data-ci]');if(th)th.classList.remove('over')});
+$('tbl').addEventListener('drop',e=>{const th=e.target.closest('th[data-ci]');if(!th||dragI==null)return;e.preventDefault();const to=+th.dataset.ci;if(to!==dragI){const [m]=cols.splice(dragI,1);cols.splice(to,0,m);localStorage.setItem('colOrder',JSON.stringify(cols.map(c=>c[0])))}dragI=null;refresh()});
+$('tbl').addEventListener('dragend',()=>{dragI=null;$('tbl').querySelectorAll('th.drag,th.over').forEach(x=>x.classList.remove('drag','over'))});
 // ---- add/edit
 let cur=null;
 function edit(r){cur=r;const f=$('f'),d=r||{type:'โคมลอย',dIn:'',ft:null,rNM:null};
@@ -316,7 +334,7 @@ let shapes=[],placeR=null;
 const NMD=(a,b)=>a.distanceTo(b)/NM;
 function area(p){const R=6371008.8,r=Math.PI/180;let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=(b[1]-a[1])*r*(2+Math.sin(a[0]*r)+Math.sin(b[0]*r))}return Math.abs(s)*R*R/2/NM/NM}
 function info(l){
- if(l instanceof L.Circle){const r=l.getRadius()/NM;return{t:'วงกลม',s:`รัศมี <b>${f1(r,3)} NM</b> · Ø ${f1(2*r,3)} NM · เส้นรอบวง ${f1(2*Math.PI*r,3)} NM · พื้นที่ ${f1(Math.PI*r*r,3)} ตร.NM`,tip:`R ${f1(r,3)} NM<br>${l.getLatLng().lat.toFixed(5)}, ${l.getLatLng().lng.toFixed(5)}`}}
+ if(l instanceof L.Circle){const r=l.getRadius()/NM,ll=l.getLatLng();return{t:'วงกลม',s:`รัศมี <b>${f1(r,3)} NM</b> · Ø ${f1(2*r,3)} NM · เส้นรอบวง ${f1(2*Math.PI*r,3)} NM · พื้นที่ ${f1(Math.PI*r*r,3)} ตร.NM`,tip:`R ${f1(r,3)} NM<br>${dmsFmt?toDMS(ll.lat,true)+' '+toDMS(ll.lng,false):ll.lat.toFixed(5)+', '+ll.lng.toFixed(5)}`}}
  if(l instanceof L.Polygon){const p=l.getLatLngs()[0];let s=0;p.forEach((a,i)=>s+=NMD(a,p[(i+1)%p.length]));const A=area(p.map(x=>[x.lat,x.lng]));return{t:l instanceof L.Rectangle?'สี่เหลี่ยม':'Polygon',s:`${p.length} จุด · เส้นรอบรูป <b>${f1(s,3)} NM</b> · พื้นที่ <b>${f1(A,3)} ตร.NM</b>`,tip:`${f1(s,3)} NM · ${f1(A,2)} ตร.NM`}}
  const p=l.getLatLngs();let s=0;for(let i=1;i<p.length;i++)s+=NMD(p[i-1],p[i]);const last=p.length>1?NMD(p[p.length-2],p[p.length-1]):0;
  return{t:'เส้น',s:`${p.length} จุด · ระยะรวม <b>${f1(s,3)} NM</b> · ช่วงสุดท้าย ${f1(last,3)} NM`,tip:`${f1(s,3)} NM`}}
@@ -362,22 +380,29 @@ async function exportWord(){
     const mkP=(t,bold,sz)=>new D.Paragraph({children:[mkT(t,bold,sz)]});
     const mkH=h=>new D.TableCell({children:[new D.Paragraph({children:[mkT(h,true,11,'FFFFFF')],alignment:'center'})],shading:{fill:'4472C4',type:'clear',color:'auto'},margins:{top:60,bottom:60,left:80,right:80}});
     const mkDc=(txt,ctr)=>new D.TableCell({children:[new D.Paragraph({children:[mkT(txt,false,11)],alignment:ctr?'center':'left'})],margins:{top:40,bottom:40,left:80,right:80}});
-    const COLS=['หมายเลขคำขอ','อำเภอ','จังหวัด','Ø(ซม.)','รัศมี(NM)','สูง(FT)','ชื่อผู้ขอ','เบอร์','เวลาเริ่ม','เวลาจบ'];
+    const COLS=['ช่องทางที่ได้รับ','ชื่ออีเมล/LINE','หมายเลขรับเอกสารอำเภอ (RQ)','ตรวจสอบพิกัด','INT OFFICER','ส่งเอกสารให้ Planner','วันที่เริ่ม','วันที่สิ้นสุด','อำเภอ','จังหวัด','พิกัด LAT','พิกัด LONG','เส้นผ่านศูนย์กลาง','รัศมี','ความสูง','ผู้ประสานงาน','เบอร์โทรศัพท์','เวลาเริ่ม','เวลาสิ้นสุด'];
+    const fmtD=d=>{if(!d)return'';const[y,mo,da]=d.split('-');return`${da}/${mo}/${y}`};
+    const fmtT=t=>(t||'').replace(':','');
+    const firstOrg=o=>(o||'').split(/[\/,]/)[0].trim();
     const tbl=new D.Table({width:{size:100,type:'pct'},rows:[
       new D.TableRow({tableHeader:true,children:COLS.map(mkH)}),
       ...v.map(r=>new D.TableRow({children:[
-        mkDc(r.id,true),mkDc(r.amphoe||''),mkDc(r.prov||''),
-        mkDc(r.dIn!=null?(r.dIn*2.54).toFixed(1):'',true),
-        mkDc(r.rNM!=null?f1(r.rNM):'',true),
+        mkDc('',true),mkDc('',true),mkDc(r.id,true),mkDc('',true),mkDc('',true),mkDc('',true),
+        mkDc(fmtD(r.d1),true),mkDc(fmtD(r.d2||r.d1),true),
+        mkDc(r.amphoe||'',true),mkDc(r.prov||'',true),
+        mkDc(toDMS(r.lat,true),true),mkDc(toDMS(r.lng,false),true),
+        mkDc(r.dIn!=null?(r.dIn*2.54).toFixed(0):'',true),
+        mkDc(r.rNM!=null?parseFloat(r.rNM.toFixed(2)):'',true),
         mkDc(r.ft??'',true),
-        mkDc(r.name||''),mkDc('',true),
-        mkDc(r.t1||'',true),mkDc(r.t2||'',true)
+        mkDc(firstOrg(r.org)||r.name||'',true),
+        mkDc('',true),
+        mkDc(fmtT(r.t1),true),mkDc(fmtT(r.t2),true)
       ]}))
     ]});
     const doc=new D.Document({sections:[{
       properties:{page:{margin:{top:720,right:720,bottom:720,left:720},size:{orientation:'landscape'}}},
       children:[
-        mkP(`รวบ ${v.length} คำขอ`,true,22),
+        new D.Paragraph({children:[mkT(`รวบ ${v.length} คำขอ   `,true,22),mkT('ตรวจสอบข้อมูลภายในเอกสารก่อนส่ง Planner ทุกครั้ง',true,14,'C00000')]}),
         mkP(`วันที่: ${dateStr}`,false,16),
         mkP(`เวลา: ${timeStr} น.`,false,16),
         mkP(`ความสูง GND-${maxFt||'?'}FT AGL`,false,16),
@@ -394,4 +419,5 @@ async function exportWord(){
 }
 $('wordBtn').onclick=exportWord;
 (()=>{const on=()=>document.body.classList.contains('dark'),upd=()=>{$('darkBtn').textContent=on()?'☀️':'🌙';localStorage.setItem('dark',on()?'1':'0')};if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');upd();$('darkBtn').onclick=()=>{document.body.classList.toggle('dark');upd()}})();
+(()=>{const m=document.querySelector('main'),r=$('resize'),saved=localStorage.getItem('tblH');if(saved)m.style.gridTemplateRows=`1fr 6px ${saved}px`;r.onmousedown=e=>{e.preventDefault();r.classList.add('drag');document.body.style.cursor='row-resize';const mv=ev=>{const h=Math.max(60,Math.min(window.innerHeight-120,m.getBoundingClientRect().bottom-ev.clientY));m.style.gridTemplateRows=`1fr 6px ${h}px`;map.invalidateSize()};const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);r.classList.remove('drag');document.body.style.cursor='';const h=parseInt(m.style.gridTemplateRows.split(' ')[2]);if(h)localStorage.setItem('tblH',h)};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up)}})();
 </script></body></html>
