@@ -102,7 +102,7 @@ body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)
 <div id="res"></div>
 <p style="font-size:11px;color:#64748b">This is an alpha test. Please expect that bugs and glitches may be occur.</p>
 </aside>
-<main><div id="map"></div><div id="mapOv"><button id="satBtn">🛰️ Satellite</button><button id="dmsBtn">📐 DDMMSS</button><button id="rBtn2">⭕ รัศมี</button></div><div id="resize" title="ลากเพื่อปรับขนาด"></div><div id="tbl"></div></main>
+<main><div id="map"></div><div id="mapOv"><button id="satBtn">🛰️ Satellite</button><button id="dmsBtn">📐 DDMMSS</button><button id="rBtn2">⭕ รัศมี</button><button id="bndBtn" class="on" title="แสดง/ซ่อนขอบเขตจังหวัด AIP">🗺 AIP Bound</button></div><div id="resize" title="ลากเพื่อปรับขนาด"></div><div id="tbl"></div></main>
 <dialog id="help" style="width:min(720px,95vw)"><form method="dialog">
 <b>วิธีเตรียมข้อมูลจาก PDF ด้วย AI</b>
 <ol style="font-size:13px;padding-left:18px"><li>กด “คัดลอก Prompt”</li><li>เปิด AI ที่ใช้ (ChatGPT / Claude / Gemini ฯลฯ) แนบไฟล์ PDF แล้ววาง Prompt</li><li>คัดลอกตาราง CSV ที่ AI ตอบ → วางในช่อง “วางตาราง” หรือบันทึกเป็นไฟล์ .csv แล้วลากเข้ามา</li><li>ตรวจแถวสีเหลือง และสุ่มเทียบกับเอกสารต้นฉบับ (โดยเฉพาะพิกัดและรัศมี)</li></ol>
@@ -148,6 +148,8 @@ L.control.scale({imperial:false,metric:false}).addTo(map);
 const lay=L.layerGroup().addTo(map);let mk_={},off=new Set(),offD=new Set(),offH=new Set(),offAIP=new Set(),hid=new Set(),hidR=new Set(),sortK=null,sortD=1;
 const AIP_SUP={provinces:['เชียงใหม่','ลำพูน'],windows:[{date:'2026-11-24',from:'03:00',to:'05:00'},{date:'2026-11-24',from:'12:00',to:'18:00'},{date:'2026-11-25',from:'12:00',to:'18:00'}]};
 function aipStatus(r){if(r.cat!=='โคม')return'na';if(!AIP_SUP.provinces.includes(r.prov))return'out';if(!r.d1||!r.t1)return'out';const t2=r.t2||r.t1;const rs=Date.parse(`${r.d1}T${r.t1}:00+07:00`);let re=Date.parse(`${r.d1}T${t2}:00+07:00`);if(isNaN(rs)||isNaN(re))return'out';if(re<rs)re+=864e5;for(const w of AIP_SUP.windows){const ws=Date.parse(`${w.date}T${w.from}:00Z`),we=Date.parse(`${w.date}T${w.to}:00Z`);if(rs<we&&re>ws)return'in'}return'out'}
+const aipBoundLay=L.layerGroup().addTo(map);
+(async()=>{for(const p of AIP_SUP.provinces){try{const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent('จังหวัด'+p)}&countrycodes=th&format=geojson&polygon_geojson=1&limit=1`);const g=await r.json();if(g.features?.length)L.geoJSON(g.features[0],{style:{color:'#dc2626',weight:1,fill:false,interactive:false}}).addTo(aipBoundLay)}catch(e){}await new Promise(s=>setTimeout(s,1100))}})();
 const COLS_DEF=[['id','เลขที่'],['type','ชนิด'],['name','ผู้ขอใบอนุญาต'],['org','ผู้จัดกิจกรรม'],['place','สถานที่'],['tambon','ตำบล'],['amphoe','อำเภอ'],['prov','จังหวัด'],['dIn','เส้นผ่านศูนย์กลาง (นิ้ว)'],['ft','สูง (FT.)'],['rNM','รัศมี (NM)'],['qty','จำนวน'],['date','วันที่'],['time','เวลา'],['lat','LAT'],['lng','LONG']];
 let cols=(()=>{try{const s=JSON.parse(localStorage.getItem('colOrder')||'[]');if(s.length===COLS_DEF.length&&s.every(k=>COLS_DEF.find(c=>c[0]===k)))return s.map(k=>COLS_DEF.find(c=>c[0]===k))}catch(e){}return[...COLS_DEF]})();
 const CELL={id:r=>`<td>${r.id}</td>`,type:r=>`<td>${r.type}</td>`,name:r=>`<td>${r.name}</td>`,org:r=>`<td>${r.org||''}</td>`,place:r=>`<td>${r.place}</td>`,tambon:r=>`<td>${r.tambon||''}</td>`,amphoe:r=>`<td>${r.amphoe||''}</td>`,prov:r=>`<td>${r.prov||''}</td>`,dIn:r=>`<td class=n>${f1(r.dIn,1)}</td>`,ft:r=>`<td class=n>${r.ft??''}</td>`,rNM:r=>`<td class=n>${f1(r.rNM)}</td>`,qty:r=>`<td class=n>${r.qty??''}</td>`,date:r=>`<td>${r.date||''}</td>`,time:r=>`<td>${r.time||''}</td>`,lat:r=>`<td class=n>${dmsFmt?toDMS(r.lat,true):r.lat.toFixed(5)} <a href="#" data-cp="${dmsFmt?toDMS(r.lat,true):r.lat.toFixed(6)}" title="คัดลอก LAT">⧉</a></td>`,lng:r=>`<td class=n>${dmsFmt?toDMS(r.lng,false):r.lng.toFixed(5)} <a href="#" data-cp="${dmsFmt?toDMS(r.lng,false):r.lng.toFixed(6)}" title="คัดลอก LONG">⧉</a></td>`};
@@ -193,6 +195,7 @@ $('vAll').onclick=e=>{e.preventDefault();hid.clear();refresh()};$('vNone').oncli
 $('q').oninput=()=>rf();$('showR').onchange=()=>{$('rBtn2').classList.toggle('on',$('showR').checked);refresh()};
 $('rBtn2').classList.toggle('on',$('showR').checked);
 $('rBtn2').onclick=()=>{$('showR').checked=!$('showR').checked;$('rBtn2').classList.toggle('on',$('showR').checked);refresh()};
+$('bndBtn').onclick=()=>{if(map.hasLayer(aipBoundLay)){map.removeLayer(aipBoundLay);$('bndBtn').classList.remove('on')}else{aipBoundLay.addTo(map);$('bndBtn').classList.add('on')}};
 $('dmsBtn').onclick=()=>{dmsFmt=!dmsFmt;$('dmsBtn').classList.toggle('on',dmsFmt);refresh();panel()};
 $('satBtn').onclick=()=>{if(map.hasLayer(satTile)){map.removeLayer(satTile);map.removeLayer(labelTile);osmTile.addTo(map);$('satBtn').textContent='🛰️ Satellite'}else{map.removeLayer(osmTile);satTile.addTo(map);labelTile.addTo(map);$('satBtn').textContent='🗺️ OSM'}};
 $('tFrom').onblur=$('tTo').onblur=e=>{e.target.value=normT(e.target.value);rf()};
