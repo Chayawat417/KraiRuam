@@ -53,8 +53,8 @@ body.dark .warn-row td{background:#3f3f00}
 body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)}
 #pasteBtn{background:#16a34a;color:#fff;border-color:#15803d}#pasteBtn:hover{background:#15803d;border-color:#166534}
 #helpBtn{background:#f97316;color:#1e3a5f;border-color:#ea580c;font-weight:600}#helpBtn:hover{background:#ea580c;border-color:#c2410c}
-#add{background:#2563eb;color:#fff;border-color:#1d4ed8}
-#add:hover{background:#1d4ed8;border-color:#1e40af}
+#add{background:#2563eb;color:#fff;border-color:#1d4ed8;box-shadow:0 0 0 2px #22c55e,0 0 8px rgba(34,197,94,.5)}
+#add:hover{background:#1d4ed8;border-color:#1e40af;box-shadow:0 0 0 2px #16a34a,0 0 12px rgba(34,197,94,.7)}
 #geo{background:#a855f7;color:#fff;border-color:#9333ea}
 #geo:hover{background:#7c3aed;border-color:#6d28d9}
 #csv{background:#4ade80;color:#fff;border-color:#22c55e}
@@ -69,16 +69,30 @@ body.dark input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1)
 #qPlot:hover{background:linear-gradient(135deg,#3b82f6,#1e3a8a);border-color:#1e3a8a}
 #xlsBtn{background:#0d9488;color:#fff;border-color:#0f766e;font-weight:600}
 #xlsBtn:hover{background:#0f766e;border-color:#115e59}
+.btn-row{display:flex;gap:6px;margin:4px 0}.btn-row button{margin:0;flex:1}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0}.btn-grid button{margin:0;width:100%}
+#add{width:100%;padding:10px;font-size:14px;font-weight:700}
+.sec-divider{border:0;border-top:1px dashed #cbd5e1;margin:12px 0 6px}
+body.dark .sec-divider{border-color:#475569}
+.sec-label{font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin:8px 0 4px}
+body.dark .sec-label{color:#94a3b8}
 </style></head><body>
 <aside>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h1 style="margin:0">🗺️ รวมการจุดบั้งไฟ / ตะไล / พลุ / โคม ทุกอย่างบนโลกใบนี้</h1><button id="darkBtn" title="สลับ Dark/Light Mode" style="margin:0;padding:4px 8px;font-size:15px">🌙</button></div>
 <div class="drop" id="drop">ลากไฟล์ <b>CSV / Excel</b> มาวางที่นี่<br>หรือคลิกเลือกไฟล์<br>(หลายไฟล์ได้+.csv .xlsx .xls .json)<input id="file" type="file" accept=".csv,.xlsx,.xlsm,.xls,.json,.txt" multiple hidden></div>
-<textarea id="paste" rows="3" placeholder="วางตารางที่ได้ AI หรือ คัดลอกจาก Excel " style="width:100%;margin-top:6px;padding:6px;font:12px monospace"></textarea>
-<button id="pasteBtn">นำเข้าตารางจาก AI</button><button id="helpBtn">📋 วิธีเตรียมข้อมูล + Prompt</button>
+<textarea id="paste" rows="3" placeholder="วางตารางที่ได้ AI หรือ คัดลอกจาก Excel " style="width:100%;margin-top:6px;padding:6px;font:12px monospace;display:none"></textarea>
+<button id="pasteBtn" style="display:none">นำเข้าตารางจาก AI</button><button id="helpBtn" style="display:none">📋 วิธีเตรียมข้อมูล + Prompt</button>
+<button id="tplBtn" style="width:100%;background:#6366f1;color:#fff;border-color:#4f46e5;font-weight:600;margin:4px 0 0" title="ดาวน์โหลดตัวอย่าง CSV สำหรับกรอกข้อมูล">⬇ ดาวน์โหลดตัวอย่าง CSV</button>
+<p style="font-size:11px;color:#64748b;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:6px 8px;margin:6px 0 0">🔒 <b>แจ้งเพื่อทราบ</b> — ขณะนี้ปิดฟังก์ชันดึงข้อมูลผ่าน AI ชั่วคราว เนื่องจากข้อกังวลด้าน <b>PDPA</b> (เอกสาร PDF มีข้อมูลส่วนบุคคลติดมาด้วย เช่น เลขบัตร ที่อยู่ เบอร์โทร) · ระหว่างนี้สามารถใช้ปุ่ม <b>+ เพิ่มคำขอด้วยตนเอง</b> (ไฮไลต์สีเขียว) หรือ <b>นำเข้าไฟล์ CSV/Excel/JSON</b> ที่เตรียมเองได้ตามปกติ · ผู้จัดทำกำลังหาวิธีการที่ปลอดภัยกว่าเพื่ออำนวยความสะดวกต่อไป ขออภัยในความไม่สะดวก 🙏</p>
 <div id="msg"></div>
 <p style="font-size:12px;color:#dc2626;font-weight:600;border:1px solid #dc2626;border-radius:6px;padding:6px 8px;margin:8px 0 2px">⚠️ กรุณาตรวจทานความถูกต้องของข้อมูลทุกครั้ง ก่อนนำไปใช้งานจริง</p>
 <h3>จัดการข้อมูล</h3>
-<button id="add">+ เพิ่มคำขอ</button><button id="qPlot" title="Quick Plot — กรอก DDMMSS เพื่อดูพิกัดด่วน">⚡ Quick Plot</button><button id="geo">ตรวจสอบ อำเภอ จังหวัด จากพิกัด</button><button id="csv">ส่งออก CSV</button><button id="xlsBtn">📊 สรุปคำขอ.CSV </button><button id="json">ส่งออก JSON</button><button id="wordBtn">📄 ส่งออก Word</button><button id="reset">ล้างคำขอทั้งหมด</button>
+<button id="add">+ เพิ่มคำขอด้วยตนเอง</button>
+<div class="btn-row"><button id="qPlot" title="Quick Plot — กรอก DDMMSS เพื่อดูพิกัดด่วน">⚡ Quick Plot</button><button id="geo" title="ตรวจสอบอำเภอ/จังหวัดจากพิกัด (Nominatim)">🔍 ตรวจพื้นที่</button></div>
+<div class="sec-label">📤 ส่งออกข้อมูล</div>
+<div class="btn-grid"><button id="csv">ส่งออก CSV</button><button id="xlsBtn">📊 สรุปคำขอ CSV</button><button id="json">ส่งออก JSON</button><button id="wordBtn">📄 ใบรวมรายการคำขอ.Word</button></div>
+<hr class="sec-divider">
+<button id="reset" style="width:100%">🗑 ล้างคำขอทั้งหมด</button>
 <h3>กรองชนิด</h3><div id="chips"></div>
 <h3>AIP Supplement <span style="font-weight:400;color:#64748b;text-transform:none">A 27/26 · โคมเท่านั้น</span></h3>
 <div style="font-size:11px;color:#64748b;margin-bottom:4px">เชียงใหม่ + ลำพูน · 24-25 พ.ย. 2026</div>
@@ -264,9 +278,9 @@ const PROMPT=`คุณเป็นผู้ช่วยดึงข้อมู
 ⚠️ สำคัญมาก (COLUMN COUNT): ทุกแถวต้องมี **22 คอลัมน์** (= 21 เครื่องหมาย comma) เสมอ นับให้แน่ใจก่อนตอบ · ถ้าคอลัมน์ไหนไม่มีข้อมูล ให้เว้นว่าง (ไม่ใส่ค่า แต่ยังต้องมี comma) เช่น A,,B,C, ไม่ใช่ A,B,C, · ห้ามเพิ่มหรือลด comma โดยเด็ดขาด เพราะจะทำให้ข้อมูลเลื่อนคอลัมน์ (เช่น ชื่อสถานที่ไปอยู่ในคอลัมน์อำเภอ)
 
 # ตัวอย่างแถวที่ถูกต้อง
-RQ79/2569,โคมลอย,โสภา ตาใจ,"โสภา ตาใจ / อรุณ ใสญาณส์",0812345678,วัดฝั่งหมิ่น,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,`;
+RQ79/2569,โคมลอย,สมชาย ใจดี,"สมชาย ใจดี / สมหญิง รุ่งเรือง",0812345678,วัดฝั่งหมิ่น,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,`;
 const HDR='เลขที่คำขอ,ชนิด,ผู้ขอใบอนุญาต,ผู้จัดกิจกรรม,เบอร์โทรศัพท์,สถานที่,อำเภอ,จังหวัด,ละติจูด,ลองจิจูด,องศาละติจูด,องศาลองจิจูด,เส้นผ่านศูนย์กลาง(นิ้ว),ความสูง(ฟุต),รัศมี(NM),จำนวน,น้ำหนัก,วันที่เริ่ม,วันที่สิ้นสุด,เวลาเริ่ม,เวลาสิ้นสุด,หมายเหตุ';
-const SAMPLE='RQ79/2569,โคมลอย,โสภา ตาใจ,"โสภา ตาใจ / อรุณ ใสญาณส์",0812345678,วัดฝั่งหมิ่น,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,';
+const SAMPLE='RQ79/2569,โคมลอย,สมชาย ใจดี,"สมชาย ใจดี / สมหญิง รุ่งเรือง",0812345678,วัดฝั่งหมิ่น,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,';
 const TYPES=['โคมลอย','โคมไฟ','โคมควัน','พลุ','บั้งไฟ','ตะไล'],MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const th2ar=s=>s.replace(/[๐-๙]/g,c=>c.charCodeAt(0)-3664);
 const sx=v=>th2ar(String(v??'')).replace(/[<>"]/g,'').trim();
@@ -353,7 +367,7 @@ async function importFiles(fs){const rep=newRep();for(const f of fs){try{await r
 $('pasteBtn').onclick=()=>{const rep=newRep(),t=$('paste').value;if(!t.trim())return;procRows(parseText(t),'ข้อความที่วาง',rep);done(rep);if(rep.ok)$('paste').value=''};
 $('helpBtn').onclick=()=>{$('prompt').value=PROMPT;$('help').showModal()};
 $('cpP').onclick=async()=>{try{await navigator.clipboard.writeText(PROMPT)}catch(e){$('prompt').select();document.execCommand('copy')}$('cpP').textContent='✓ คัดลอกแล้ว';setTimeout(()=>$('cpP').textContent='📋 คัดลอก Prompt',1500)};
-$('tpl').onclick=()=>dl('ตัวอย่าง.csv','\ufeff'+HDR+'\n'+SAMPLE+'\n','text/csv');
+$('tpl').onclick=$('tplBtn').onclick=()=>dl('ตัวอย่าง.csv','\ufeff'+HDR+'\n'+SAMPLE+'\n','text/csv');
 $('drop').onclick=()=>$('file').click();$('file').onchange=e=>importFiles(e.target.files);
 $('drop').ondragover=e=>{e.preventDefault();$('drop').classList.add('over')};$('drop').ondragleave=()=>$('drop').classList.remove('over');
 $('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('over');importFiles(e.dataTransfer.files)};
@@ -468,7 +482,7 @@ async function exportWord(){
     const blob=await D.Packer.toBlob(doc);
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`รวบคำขอ_${dates[0]||new Date().toISOString().slice(0,10)}.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }catch(e){alert('เกิดข้อผิดพลาด: '+e.message);console.error(e)}
-  finally{btn.disabled=false;btn.textContent='📄 ส่งออก Word'}
+  finally{btn.disabled=false;btn.textContent='📄 ใบรวมรายการคำขอ.Word'}
 }
 $('wordBtn').onclick=exportWord;
 (()=>{const on=()=>document.body.classList.contains('dark'),upd=()=>{$('darkBtn').textContent=on()?'☀️':'🌙';localStorage.setItem('dark',on()?'1':'0')};if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');upd();$('darkBtn').onclick=()=>{document.body.classList.toggle('dark');upd()}})();
