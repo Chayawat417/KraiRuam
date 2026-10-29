@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;font:14px/1.4 "Noto Sans Thai",system-ui,sans-serif;color:#1f2937;height:100vh;display:grid;grid-template-columns:290px 1fr;transition:grid-template-columns .35s cubic-bezier(.4,0,.2,1)}
 body.nosb{grid-template-columns:0 1fr}
@@ -29,8 +30,9 @@ body.dark #mapOv{background:#1e293b;border-color:#475569}
 #mapOv button.on{background:#2563eb;color:#fff}
 #mapOv button:hover:not(.on){background:#f1f5f9}
 body.dark #mapOv button:hover:not(.on){background:#334155}
-#mapOv.collapsed{padding:4px;gap:0;border-radius:8px;max-width:none;width:auto}
+#mapOv.collapsed{padding:0;gap:0;border-radius:8px;max-width:none;width:auto}
 #mapOv.collapsed>button:not(#ovTog){max-height:0;opacity:0;padding:0;margin:0;border:0;pointer-events:none}
+#mapOv.collapsed>#ovTog{align-self:stretch!important;padding:6px 14px!important;font-size:12px!important}
 #ovTog{line-height:1;padding:3px 8px!important;font-size:11px!important;color:#64748b;border-radius:6px;cursor:pointer;text-align:center!important;align-self:flex-end;background:transparent}
 #ovTog:hover{background:#f1f5f9}
 body.dark #ovTog{color:#cbd5e1}body.dark #ovTog:hover{background:#334155}
@@ -180,11 +182,13 @@ body.dark aside details .chip,body.dark aside details label,body.dark aside deta
 <p style="color:#dc2626;font-weight:600;border-top:1px dashed #f59e0b;padding-top:4px;margin:4px 0 0">⚠️ กรุณาตรวจทานความถูกต้องของข้อมูลทุกครั้ง ก่อนนำไปใช้งานจริง</p>
 </details>
 <h3>จัดการข้อมูล</h3>
-<div class="drop" id="drop">ลากไฟล์ <b>CSV / Excel</b> มาวางที่นี่<br>หรือคลิกเลือกไฟล์<br>(หลายไฟล์ได้+.csv .xlsx .xls .json)<input id="file" type="file" accept=".csv,.xlsx,.xlsm,.xls,.json,.txt" multiple hidden></div>
+<div class="drop" id="drop">ลากไฟล์ <b>CSV / Excel / PDF</b> มาวางที่นี่<br>หรือคลิกเลือกไฟล์<br>(.csv .xlsx .xls .json .pdf)<br><span style="font-size:10px;color:#64748b">📄 PDF จะเข้า OCR อัตโนมัติ (ขึ้นแจ้งเตือนก่อน)</span><input id="file" type="file" accept=".csv,.xlsx,.xlsm,.xls,.json,.txt,.pdf" multiple hidden></div>
 <textarea id="paste" rows="3" placeholder="วางตารางที่ได้ AI หรือ คัดลอกจาก Excel " style="width:100%;margin-top:6px;padding:6px;font:12px monospace;display:none"></textarea>
 <button id="pasteBtn" style="display:none">นำเข้าตารางจาก AI</button><button id="helpBtn" style="display:none">📋 วิธีเตรียมข้อมูล + Prompt</button>
 <button id="tplBtn" style="width:100%;background:#6366f1;color:#fff;border-color:#4f46e5;font-weight:600;margin:4px 0 6px" title="ดาวน์โหลดตัวอย่าง CSV สำหรับกรอกข้อมูล">⬇ ดาวน์โหลดตัวอย่าง CSV</button>
 <button id="add">+ เพิ่มคำขอด้วยตนเอง</button>
+<button id="ocrBtn" title="ลาก PDF scan → OCR อ่านข้อมูลอัตโนมัติ (ประมวลผลใน browser · ไม่ส่งข้อมูลออก)" style="width:100%;background:#f59e0b;color:#fff;border-color:#d97706;font-weight:600;margin-top:4px;line-height:1.3">📄 PDF OCR (Beta) <br><small style="font-size:10px;font-weight:400;opacity:.9">(อัพโหลด PDF โดนตรงได้เลย)</small></button>
+<input id="ocrFile" type="file" accept=".pdf" hidden>
 <div class="btn-row"><button id="qPlot" title="Quick Plot — กรอก DDMMSS เพื่อดูพิกัดด่วน">⚡ Quick Plot</button><button id="geo" title="ตรวจสอบอำเภอ/จังหวัดจากพิกัด (Nominatim)">🔍 ตรวจพื้นที่</button></div>
 <div id="msg"></div>
 <div id="summary"></div>
@@ -227,6 +231,20 @@ body.dark aside details .chip,body.dark aside details label,body.dark aside deta
 <textarea id="prompt" readonly rows="13" style="width:100%;font:12px/1.4 monospace"></textarea>
 <div style="margin-top:6px"><button type="button" id="cpP">📋 คัดลอก Prompt</button><button type="button" id="tpl">⬇ ดาวน์โหลดตัวอย่าง CSV</button><button value="x">ปิด</button></div>
 <p style="font-size:11px;color:#64748b;margin:6px 0 0">คำเตือน: PDF ที่ส่งให้ AI มีข้อมูลส่วนบุคคล (เลขบัตร ที่อยู่ เบอร์โทร) ควรตรวจนโยบายของหน่วยงานก่อนใช้ AI ภายนอก · แอพนี้ทำงานในเครื่อง ไม่ส่งข้อมูลไปไหน (ยกเว้นปุ่มตรวจ อ./จ. ที่ส่งเฉพาะพิกัด)</p>
+</form></dialog>
+<dialog id="ocrDlg" style="width:min(600px,95vw);padding:16px 20px"><form method="dialog">
+<h2 style="margin:0 0 10px;color:#f59e0b">📄 OCR PDF — แจ้งเพื่อทราบ </h2>
+<div style="font-size:13px;line-height:1.6">
+<p><b>ฟีเจอร์นี้ประมวลผลใน browser ของท่าน · ไม่มีการส่งข้อมูลออกนอกเครื่อง</b></p>
+<ul style="padding-left:18px">
+<li>✅ ใช้ <b>PDF.js</b> (Mozilla) + <b>Tesseract.js</b> (open-source)</li>
+<li>✅ ประมวลผล 100% ใน browser (WebAssembly) · ไม่ส่งไฟล์ไปที่ cloud</li>
+<li>⚠️ Accuracy: เลขอารบิกและภาษาอังกฤษ 60% - 70% · ลายมือ 30-50% · <b>ต้องตรวจทานทุกครั้ง</b></li>
+
+</ul>
+<p style="color:#dc2626;font-weight:600;background:#fef2f2;padding:10px;border-radius:6px;border:1px solid #fecaca;line-height:1.6">⚠️ <b>ข้อมูลมีโอกาสผิดสูง · อ่านไม่ติดบ่อย</b><br>หลัง OCR เสร็จ กรุณา <b>ตรวจทานทุกแถว</b> · หากข้อมูลไม่ถูกต้องให้แก้ไขเองโดยคลิกปุ่ม <b>"✎ แก้ไข"</b> ท้ายแถวในตาราง<br><br>⚠️ หน้าที่ของท่าน: ตรวจทานทุกครั้งก่อนนำไปใช้งานจริง · ผู้พัฒนาไม่รับผิดชอบหากข้อมูลผิดพลาด</p>
+</div>
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px"><button value="x" formnovalidate style="background:#64748b;color:#fff;border-color:#475569;padding:8px 20px;font-weight:600">ยกเลิก</button><button value="ok" id="ocrConsent" style="background:#16a34a;color:#fff;border-color:#15803d;padding:8px 20px;font-weight:700">✓ ยอมรับและใช้งาน</button></div>
 </form></dialog>
 <dialog id="dlg"><form method="dialog" id="f">
 <b id="dt">ข้อมูลกิจกรรม</b>
@@ -579,9 +597,13 @@ $('pasteBtn').onclick=()=>{const rep=newRep(),t=$('paste').value;if(!t.trim())re
 $('helpBtn').onclick=()=>{$('prompt').value=PROMPT;$('help').showModal()};
 $('cpP').onclick=async()=>{try{await navigator.clipboard.writeText(PROMPT)}catch(e){$('prompt').select();document.execCommand('copy')}$('cpP').textContent='✓ คัดลอกแล้ว';setTimeout(()=>$('cpP').textContent='📋 คัดลอก Prompt',1500)};
 $('tpl').onclick=$('tplBtn').onclick=()=>dl('ตัวอย่าง.csv','\ufeff'+HDR+'\n'+SAMPLE+'\n','text/csv');
-$('drop').onclick=()=>$('file').click();$('file').onchange=e=>importFiles(e.target.files);
+let pendingOcrPdf=null;
+function handleDroppedFiles(fs){const arr=[...fs];const pdfs=arr.filter(f=>/\.pdf$/i.test(f.name));const others=arr.filter(f=>!/\.pdf$/i.test(f.name));
+ if(others.length)importFiles(others);
+ if(pdfs.length){pendingOcrPdf=pdfs[0];if(pdfs.length>1)alert('รองรับ PDF ครั้งละ 1 ไฟล์ · จะประมวลผลไฟล์แรก: '+pdfs[0].name);$('ocrDlg').showModal()}}
+$('drop').onclick=()=>$('file').click();$('file').onchange=e=>{handleDroppedFiles(e.target.files);e.target.value=''};
 $('drop').ondragover=e=>{e.preventDefault();$('drop').classList.add('over')};$('drop').ondragleave=()=>$('drop').classList.remove('over');
-$('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('over');importFiles(e.dataTransfer.files)};
+$('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('over');handleDroppedFiles(e.dataTransfer.files)};
 // ---- export / reset / geocode
 const dl=(n,t,m)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 const vExp=()=>view().filter(r=>!hid.has(key(r)));
@@ -702,6 +724,66 @@ function encodeShare(){const data=vExp().map(r=>SHARE_KEYS.map(k=>r[k]??''));ret
 function decodeShare(s){try{const arr=JSON.parse(decodeURIComponent(escape(atob(s))));return arr.map(row=>{const o={};SHARE_KEYS.forEach((k,i)=>o[k]=row[i]);o.cat=catOf(o.type);o.name='';o.org='';o.tel='';o.date=o.d1?(o.d2&&o.d2!==o.d1?thD(o.d1)+' – '+thD(o.d2):thD(o.d1)):'';o.time=o.t1&&o.t2?o.t1+'-'+o.t2:(o.t1||'');o.warn='';o.uid=uid();return o})}catch(e){console.warn('share decode fail',e);return null}}
 $('shareBtn').onclick=async()=>{const v=vExp();if(!v.length){alert('ไม่มีข้อมูลที่จะแชร์');return}const url=location.origin+location.pathname+'#s='+encodeShare();try{await navigator.clipboard.writeText(url);const b=$('shareBtn');const o=b.textContent;b.textContent=`✓ คัดลอกลิงก์ ${v.length} คำขอ`;setTimeout(()=>b.textContent=o,2000)}catch(e){prompt('คัดลอกลิงก์นี้:',url)}};
 (()=>{const h=location.hash;if(h.startsWith('#s=')){const arr=decodeShare(h.slice(3));if(arr&&arr.length){recs.push(...arr);refresh();fit();msg(`📥 โหลด <b>${arr.length}</b> คำขอจากลิงก์แชร์ (ไม่มีข้อมูลผู้ขอ/เบอร์โทร)`);history.replaceState(null,'',location.pathname)}}})();
+// ---- OCR PDF (PDF.js text layer + Tesseract.js fallback)
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+let tesseractLoaded=false;
+async function loadTesseract(){if(tesseractLoaded)return;await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.0.5/dist/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)});tesseractLoaded=true}
+async function extractPdfPages(file){const buf=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;const pages=[];
+ for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();pages.push(content.items.map(it=>it.str).join(' '))}
+ return{pages,hasTextLayer:pages.join('').replace(/\s/g,'').length>50*pdf.numPages,pdf}}
+async function ocrPdfPages(pdf,onProgress){await loadTesseract();
+ const N=Math.min(4,Math.max(2,navigator.hardwareConcurrency||4),pdf.numPages);
+ const workers=await Promise.all(Array.from({length:N},()=>Tesseract.createWorker(['tha','eng'],1)));
+ const pages=new Array(pdf.numPages);let done=0;
+ async function renderPage(i){const page=await pdf.getPage(i+1);const vp=page.getViewport({scale:2});const canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;return canvas}
+ let next=0;
+ await Promise.all(workers.map(async w=>{while(true){const i=next++;if(i>=pdf.numPages)break;const canvas=await renderPage(i);const{data:{text}}=await w.recognize(canvas);pages[i]=text;done++;onProgress&&onProgress(done,pdf.numPages)}}));
+ await Promise.all(workers.map(w=>w.terminate()));return pages}
+function parseOcrText(text){const t=th2ar(text).replace(/\s+/g,' ');const o={};
+ let m;
+ if(m=t.match(/RQ\s*(\d+)\s*\/\s*(\d+)/i))o.id='RQ'+m[1]+'/'+m[2];
+ const types=['โคมลอย','โคมไฟ','โคมควัน','พลุ','บั้งไฟ','ตะไล'];for(const ty of types)if(t.includes(ty)){o.type=ty;break}
+ if(m=t.match(/(\d+(?:\.\d+)?)\s*นิ้ว/))o.dia=m[1];
+ else if(m=t.match(/(\d+(?:\.\d+)?)\s*(ซม|cm)/))o.dia=m[1],o.du='ซม.';
+ if(m=t.match(/(\d+(?:\.\d+)?)\s*(?:กรัม|g)/))o.wt=m[1]+' กรัม';
+ if(m=t.match(/จำนวน\s*(\d+)/))o.qty=m[1];
+ if(m=t.match(/ประมาณ\s*(\d+)\s*(?:ฟุต|ft)/))o.ft=m[1];
+ if(m=t.match(/รัศมี\s*(\d+(?:\.\d+)?)\s*(?:นาฬิกา|NM|ไมล์)/i))o.rad=m[1];
+ const coords=t.match(/(\d{2}\.\d{6,})\s*(?:\([^)]*\))?\s*,?\s*(\d{2,3}\.\d{6,})/);if(coords){o.lat=coords[1];o.lng=coords[2]}
+ if(m=t.match(/(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})/)){const mo={มกราคม:1,กุมภาพันธ์:2,มีนาคม:3,เมษายน:4,พฤษภาคม:5,มิถุนายน:6,กรกฎาคม:7,สิงหาคม:8,กันยายน:9,ตุลาคม:10,พฤศจิกายน:11,ธันวาคม:12}[m[2]];let y=+m[3];if(y>2400)y-=543;o.d1=`${y}-${String(mo).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`}
+ const times=[...t.matchAll(/(\d{1,2})[.:](\d{2})/g)];if(times.length>=1)o.t1=String(+times[0][1]).padStart(2,'0')+':'+times[0][2];if(times.length>=2)o.t2=String(+times[1][1]).padStart(2,'0')+':'+times[1][2];
+ if(m=t.match(/ณ\s*สถานที่[^฀-๿]*([ก-๙\s]+?)(?=\s+(?:หมู่|พิกัด|ตั้ง|$))/))o.place=m[1].trim();
+ if(m=t.match(/(?:อำเภอ|อ\.)\s*([ก-๙]+)/))o.amphoe=m[1];
+ if(m=t.match(/(?:จังหวัด|จ\.)\s*([ก-๙]+)/))o.prov=m[1];
+ if(m=t.match(/(?:ชื่อ|ข้าพเจ้า)\s+([ก-๙\s]+?)(?=\s+(?:เบอร์|โทร|บ้าน|$))/))o.name=m[1].trim();
+ const tels=[...t.matchAll(/0\d{8,9}/g)];if(tels.length)o.tel=tels[0][0];
+ return o}
+function fillFormOcr(o){cur=null;const f=$('f');
+ f.id.value=o.id||'RQ/';f.type.value=o.type||'โคมลอย';f.name.value=o.name||'';f.org.value='';f.tel.value=o.tel||'';
+ f.place.value=o.place||'';f.amphoe.value=o.amphoe||'';f.prov.value=o.prov||'';
+ f.lat.value=o.lat||'';f.lng.value=o.lng||'';
+ f.dia.value=o.dia||'';f.du.value=o.du||'นิ้ว';f.ft.value=o.ft||'';f.rad.value=o.rad||'';f.qty.value=o.qty||'';f.wt.value=o.wt||'';
+ f.d1.value=o.d1||'';f.d2.value=o.d1||'';f.t1.value=o.t1||'';f.t2.value=o.t2||'';
+ $('dlg').showModal()}
+function ocrRecToObj(parsed){const _lat=dms(parsed.lat),_lng=dms(parsed.lng);if(_lat==null||_lng==null||isNaN(_lat)||isNaN(_lng))return null;
+ const type=parsed.type||'โคมลอย';const d1=parsed.d1||'';const d2=parsed.d1||'';const t1=parsed.t1||'';const t2=parsed.t2||'';
+ const dateStr=d1?(d2&&d2!==d1?thD(d1)+' – '+thD(d2):thD(d1)):'';const timeStr=t1&&t2?t1+'-'+t2:(t1||'');
+ return{uid:uid(),id:parsed.id||'-',type,cat:catOf(type),name:parsed.name||'',org:'',tel:parsed.tel||'',place:parsed.place||'',amphoe:parsed.amphoe||'',prov:parsed.prov||'',lat:_lat,lng:_lng,dIn:parsed.dia?toIn(+parsed.dia,parsed.du||'นิ้ว'):null,ft:parsed.ft?+parsed.ft:null,rNM:parsed.rad?+parsed.rad:null,qty:parsed.qty||'',wt:parsed.wt||'',d1,d2,t1,t2,date:dateStr,time:timeStr,warn:'[จาก OCR · ตรวจทาน]'}}
+async function processOcrPdf(file){const b=$('ocrBtn');b.disabled=true;b.textContent='⏳ กำลังอ่าน PDF...';
+ try{const{pages,hasTextLayer,pdf}=await extractPdfPages(file);let pageTexts=pages;
+  if(!hasTextLayer){if(pdf.numPages>5&&!confirm(`PDF ${pdf.numPages} หน้า · ต้อง OCR ประมาณ ${Math.ceil(pdf.numPages*10/60)} นาที · ดำเนินการต่อ?`)){b.disabled=false;b.innerHTML='📄 PDF OCR<br><small style="font-size:10px;font-weight:400;opacity:.9">(อัพโหลดเอกสารได้เลย · ความแม่นยำต่ำ)</small>';return}
+   b.textContent='⏳ โหลด Tesseract (parallel 4 workers)...';pageTexts=await ocrPdfPages(pdf,(done,tot)=>{b.textContent=`⏳ OCR ${done}/${tot} หน้า`})}
+  let added=0,skipped=0;const addedRecs=[];
+  pageTexts.forEach((txt,i)=>{const parsed=parseOcrText(txt);const rec=ocrRecToObj(parsed);if(rec){recs.push(rec);addedRecs.push(rec);added++}else skipped++});
+  refresh();if(added)fit();
+  if(pdf.numPages===1&&addedRecs.length===1){recs.pop();fillFormOcr(parseOcrText(pageTexts[0]));msg(`📄 OCR อ่าน PDF 1 หน้า ${hasTextLayer?'(text layer)':'(OCR)'} · กรุณาตรวจทาน`)}
+  else msg(`📄 OCR เสร็จ · เพิ่ม <b>${added}</b> คำขอ${skipped?` · ข้าม ${skipped} หน้า (ไม่มีพิกัด)`:''} ${hasTextLayer?'(text layer · ไว)':'(OCR image)'} · <b>กรุณาตรวจทานทุกแถว</b>`)}
+ catch(e){alert('OCR ไม่สำเร็จ: '+e.message);console.error(e)}
+ finally{b.disabled=false;b.innerHTML='📄 PDF OCR<br><small style="font-size:10px;font-weight:400;opacity:.9">(อัพโหลดเอกสารได้เลย · ความแม่นยำต่ำ)</small>'}}
+$('ocrBtn').onclick=()=>{pendingOcrPdf=null;$('ocrDlg').showModal()};
+$('ocrConsent').onclick=e=>{if(e.target.closest('form').returnValue!=='x'){setTimeout(()=>{if(pendingOcrPdf){const f=pendingOcrPdf;pendingOcrPdf=null;processOcrPdf(f)}else $('ocrFile').click()},200)}};
+$('ocrDlg').addEventListener('close',()=>{pendingOcrPdf=null});
+$('ocrFile').onchange=e=>{const f=e.target.files[0];if(f)processOcrPdf(f);e.target.value=''};
 (()=>{const on=()=>document.body.classList.contains('dark'),upd=()=>{$('darkBtn').textContent=on()?'☀️':'🌙';localStorage.setItem('dark',on()?'1':'0')};if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');upd();$('darkBtn').onclick=()=>{document.body.classList.toggle('dark');upd()}})();
 (()=>{const upd=()=>{const h=document.body.classList.contains('nosb');$('sbTog').textContent=h?'▶':'◀';$('sbTog').title=h?'แสดง sidebar (Ctrl+B)':'ซ่อน sidebar (Ctrl+B)';localStorage.setItem('nosb',h?'1':'0');
  let t0=performance.now();const tick=()=>{map.invalidateSize({animate:false});if(performance.now()-t0<400)requestAnimationFrame(tick)};requestAnimationFrame(tick)};
