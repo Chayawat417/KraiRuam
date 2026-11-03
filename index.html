@@ -22,7 +22,7 @@ body.dark #tlBar{background:#1e293b;border-color:#475569;color:#e2e8f0}
 aside{padding:12px;overflow:auto;background:#f8fafc;border-right:1px solid #e2e8f0}
 h1{font-size:16px;margin:0 0 10px}h3{font-size:12px;color:#64748b;margin:10px 0 4px;text-transform:uppercase}
 main{display:grid;grid-template-rows:1fr 6px 38vh;min-width:0;position:relative}#map{min-height:100px}
-#resize{background:#cbd5e1;cursor:row-resize;transition:background .15s}#resize:hover,#resize.drag{background:#2563eb}
+#resize{background:#cbd5e1;cursor:row-resize;transition:background .15s;position:relative}#resize:hover,#resize.drag{background:#2563eb}
 body.dark #resize{background:#334155}body.dark #resize:hover,body.dark #resize.drag{background:#2563eb}
 #mapOv{position:absolute;top:10px;right:10px;z-index:500;display:flex;flex-direction:column;align-items:stretch;gap:3px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:6px;box-shadow:0 4px 14px rgba(0,0,0,.2);max-width:200px;min-width:0}
 body.dark #mapOv{background:#1e293b;border-color:#475569}
@@ -107,6 +107,21 @@ body.dark #savedInfo{background:#064e3b;border-color:#059669;color:#6ee7b7}
 @keyframes savedBadgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}50%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.95)}}
 #savedBadge{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#15803d;color:#fff;font-size:17px;font-weight:700;padding:14px 32px;border-radius:12px;z-index:10000;pointer-events:none;box-shadow:0 8px 32px rgba(21,128,61,.45);opacity:0;white-space:nowrap}
 #savedBadge.pop{animation:savedBadgePop 1s cubic-bezier(.34,1.56,.64,1) forwards}
+input.cb-sel{accent-color:#06b6d4;width:16px;height:16px;cursor:pointer}
+input.cb-vis{accent-color:#2563eb;width:14px;height:14px;cursor:pointer;border-radius:50%}
+th.col-sel,th.col-vis{text-align:center;font-size:11px;line-height:1.2;padding:4px 2px!important}
+th.col-sel{background:#ecfeff!important;color:#0e7490}
+th.col-vis{background:#eff6ff!important;color:#1d4ed8}
+body.dark th.col-sel{background:#083344!important;color:#67e8f9}
+body.dark th.col-vis{background:#172554!important;color:#93c5fd}
+td.cell-sel{background:rgba(6,182,212,.08);text-align:center}
+td.cell-vis{background:rgba(37,99,235,.08);text-align:center}
+body.dark td.cell-sel{background:rgba(6,182,212,.12)}
+body.dark td.cell-vis{background:rgba(37,99,235,.15)}
+@keyframes justCopiedPulse{0%{background:#cffafe;box-shadow:inset 0 0 0 2px #06b6d4}40%{background:#a5f3fc;box-shadow:inset 0 0 0 3px #0891b2}100%{background:transparent;box-shadow:inset 0 0 0 0 #06b6d4}}
+tr.just-copied>td{animation:justCopiedPulse 2.4s ease-out forwards}
+body.dark tr.just-copied>td{animation-name:justCopiedPulseD}
+@keyframes justCopiedPulseD{0%{background:#164e63;box-shadow:inset 0 0 0 2px #22d3ee}40%{background:#155e75;box-shadow:inset 0 0 0 3px #06b6d4}100%{background:transparent;box-shadow:inset 0 0 0 0 #06b6d4}}
 @keyframes copyPrevIn{0%{opacity:0;transform:scale(.5) translateY(8px)}60%{transform:scale(1.1) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes copyPrevPulse{0%,100%{box-shadow:0 0 0 0 rgba(8,145,178,.5)}50%{box-shadow:0 0 0 6px rgba(8,145,178,0)}}
 #copyPrev{transition:background .15s,transform .1s}
@@ -117,7 +132,12 @@ body.dark #savedInfo{background:#064e3b;border-color:#059669;color:#6ee7b7}
 dialog[open]{animation:dlgPop .25s cubic-bezier(.34,1.56,.64,1)}
 dialog[open]::backdrop{animation:bdFade .25s ease-out forwards;background:rgba(0,0,0,.5)}
 @media(max-width:760px){body{grid-template-columns:1fr;height:auto}main{height:100vh}}
-.mt{background:#2563eb;color:#fff;border:0;font-weight:600;box-shadow:none}.mt:before{display:none}
+.mt{background:#2563eb;color:#fff;border:2px solid #1d4ed8;font-weight:600;box-shadow:0 2px 8px rgba(37,99,235,.4);cursor:pointer;transition:background .15s,box-shadow .15s,border-color .15s;padding:8px 14px!important;border-radius:8px}.mt:before{display:none}
+.mt:hover{background:#1d4ed8;border-color:#1e40af;box-shadow:0 4px 14px rgba(37,99,235,.6)}
+.mt:active{background:#1e40af}
+.mt::after{content:'📋 คลิกเพื่อคัดลอก';display:block;font-size:10px;font-weight:400;opacity:.85;margin-top:3px;letter-spacing:.3px}
+.mt.copied{background:#15803d;border-color:#166534;box-shadow:0 2px 8px rgba(21,128,61,.5)}
+.mt.copied::after{content:''}
 .warn-row td{background:#fef9c3}
 .aip-in td{background:#d1fae5!important}
 body.dark .aip-in td{background:#064e3b!important}
@@ -145,9 +165,16 @@ body.dark a{color:#60a5fa}
 body.dark .warn-row td{background:#3f3f00}
 tr.sel>td{background:#dbeafe!important;box-shadow:inset 3px 0 0 #2563eb}
 body.dark tr.sel>td{background:#1e3a5f!important}
-#selBar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:10px 16px;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.4);z-index:9998;transition:transform .25s cubic-bezier(.34,1.56,.64,1);font-size:13px;display:flex;gap:12px;align-items:center}
-#selBar.on{transform:translateX(-50%) translateY(0)}
+#selBar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(calc(100% + 40px));background:#1e293b;color:#fff;padding:10px 16px;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.4);z-index:9998;transition:transform .25s cubic-bezier(.34,1.56,.64,1),opacity .2s;opacity:0;pointer-events:none;font-size:13px;display:flex;flex-direction:column;gap:8px;align-items:stretch;max-width:min(900px,96vw)}
+#selBar.on{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
 #selBar button{margin:0;padding:6px 14px;font-weight:600;border-radius:6px}
+#selBar .row1{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+#selBatch{display:none;grid-template-columns:auto 1fr auto 1fr;gap:6px 10px;align-items:center;padding:10px;background:#0f172a;border-radius:6px;font-size:12px}
+#selBar.editing #selBatch{display:grid}
+#selBatch input,#selBatch select{background:#1e293b;color:#fff;border:1px solid #475569;padding:4px 6px;border-radius:4px;font-size:12px;min-width:0;width:100%}
+#selBatch label{color:#94a3b8;font-weight:600;white-space:nowrap}
+#selBatch .full{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+#selBatch .hint{grid-column:1/-1;font-size:11px;color:#64748b;font-style:italic;text-align:center}
 body.dark input[type="time"]::-webkit-calendar-picker-indicator,body.dark input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1)}
 #pasteBtn{background:#16a34a;color:#fff;border-color:#15803d}#pasteBtn:hover{background:#15803d;border-color:#166534}
 #helpBtn{background:#f97316;color:#1e3a5f;border-color:#ea580c;font-weight:600}#helpBtn:hover{background:#ea580c;border-color:#c2410c}
@@ -189,20 +216,22 @@ body.dark aside details>summary::before,body.dark aside details>summary small{co
 body.dark aside details h3{color:#c7d2fe}
 body.dark aside details a{color:#a5b4fc}
 body.dark aside details .chip,body.dark aside details label,body.dark aside details span,body.dark aside details div{color:#e0e7ff}
+.pdpaWarn{background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:10px 12px;margin:10px 0 8px;font-size:12px;color:#78350f;line-height:1.6}
+body.dark .pdpaWarn{background:#451a03;border-color:#b45309;color:#fcd34d}
 </style></head><body>
 <aside>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h1 style="margin:0">🗺️ รวมการจุดบั้งไฟ / ตะไล / พลุ / โคม ทุกอย่างบนโลกใบนี้</h1><button id="darkBtn" title="สลับ Dark/Light Mode" style="margin:0;padding:4px 8px;font-size:15px">🌙</button></div>
 <details id="noticeBox" style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:4px 8px;margin:0 0 8px;font-size:11px"><summary style="cursor:pointer;color:#92400e;font-weight:600;list-style:none">ℹ️ ประกาศ & คำเตือน (คลิกเพื่ออ่าน)</summary>
-<p style="color:#64748b;margin:6px 0 4px">🔒 <b>แจ้งเพื่อทราบ</b> — ขณะนี้ปิดฟังก์ชันดึงข้อมูลผ่าน AI ชั่วคราว เนื่องจากข้อกังวลด้าน <b>PDPA</b> (เอกสาร PDF มีข้อมูลส่วนบุคคลติดมาด้วย เช่น เลขบัตร ที่อยู่ เบอร์โทร) · ระหว่างนี้สามารถใช้ปุ่ม <b>+ เพิ่มคำขอด้วยตนเอง</b> (ไฮไลต์สีเขียว) หรือ <b>นำเข้าไฟล์ CSV/Excel/JSON</b> ที่เตรียมเองได้ตามปกติ · ผู้จัดทำกำลังหาวิธีการที่ปลอดภัยกว่าเพื่ออำนวยความสะดวกต่อไป ขออภัยในความไม่สะดวก 🙏</p>
+<p style="color:#64748b;margin:6px 0 4px">⚠️ <b>คำเตือน PDPA</b> — หากนำ PDF ไปใช้กับ AI ภายนอก กรุณา<b>ลบหรือปิดข้อมูลส่วนบุคคลออกก่อนทุกครั้ง</b> (เลขบัตร ที่อยู่ เบอร์โทร ลายเซ็น) · <b>แนะนำให้ใช้งานผ่าน AI Copilot ของบริษัทเท่านั้น</b> · <b>ผู้ใช้ต้องรับผิดชอบข้อมูลที่ส่งออกไปเองทั้งหมด</b> <br> ผู้จัดทำแอพไม่รับผิดชอบต่อข้อมูลที่ผู้ใช้ส่งไปยัง AI บุคคลที่สาม</p>
 <p style="color:#dc2626;font-weight:600;border-top:1px dashed #f59e0b;padding-top:4px;margin:4px 0 0">⚠️ กรุณาตรวจทานความถูกต้องของข้อมูลทุกครั้ง ก่อนนำไปใช้งานจริง</p>
 </details>
 <h3>จัดการข้อมูล</h3>
 <div class="drop" id="drop">ลากไฟล์ <b>CSV / Excel</b> มาวางที่นี่<br>หรือคลิกเลือกไฟล์<br>(.csv .xlsx .xls .json)<input id="file" type="file" accept=".csv,.xlsx,.xlsm,.xls,.json,.txt" multiple hidden></div>
-<textarea id="paste" rows="3" placeholder="วางตารางที่ได้ AI หรือ คัดลอกจาก Excel " style="width:100%;margin-top:6px;padding:6px;font:12px monospace;display:none"></textarea>
-<button id="pasteBtn" style="display:none">นำเข้าตารางจาก AI</button><button id="helpBtn" style="display:none">📋 วิธีเตรียมข้อมูล + Prompt</button>
+<textarea id="paste" rows="3" placeholder="วางตาราง CSV Snippet หรือคัดลอกจาก Excel" style="width:100%;margin-top:6px;padding:6px;font:12px monospace"></textarea>
+<div style="display:flex;gap:4px;margin-bottom:4px"><button id="pasteBtn" style="flex:1">นำเข้าตาราง CSV</button><button id="helpBtn" title="คำเตือนก่อนใช้ AI">⚠️</button></div>
 <button id="tplBtn" style="width:100%;background:#6366f1;color:#fff;border-color:#4f46e5;font-weight:600;margin:4px 0 6px" title="ดาวน์โหลดตัวอย่าง CSV สำหรับกรอกข้อมูล">⬇ ดาวน์โหลดตัวอย่าง CSV</button>
 <button id="add">+ เพิ่มคำขอด้วยตนเอง</button>
-<button id="ocrBtn" title="ลาก PDF scan → OCR อ่านข้อมูลอัตโนมัติ (ประมวลผลใน browser · ไม่ส่งข้อมูลออก)" style="width:100%;background:#f59e0b;color:#fff;border-color:#d97706;font-weight:600;margin-top:4px;line-height:1.3">📄 PDF OCR (Beta) <br><small style="font-size:10px;font-weight:400;opacity:.9">(อัพโหลด PDF โดนตรงได้เลย)</small></button>
+<button id="ocrBtn" title="ลาก PDF scan → OCR อ่านข้อมูลอัตโนมัติ (ประมวลผลใน browser · ไม่ส่งข้อมูลออก)" style="width:100%;background:#f59e0b;color:#fff;border-color:#d97706;font-weight:600;margin-top:4px;line-height:1.3">📄 PDF OCR (Beta) <br><small style="font-size:10px;font-weight:400;opacity:.9">(อัพโหลด PDF โดยตรงได้เลย (ความแม่นยำต่ำ))</small></button>
 <input id="ocrFile" type="file" accept=".pdf" hidden>
 <div class="btn-row"><button id="qPlot" title="Quick Plot — กรอก DDMMSS เพื่อดูพิกัดด่วน">⚡ Quick Plot</button><button id="geo" title="ตรวจสอบอำเภอ/จังหวัดจากพิกัด (Nominatim)">🔍 ตรวจพื้นที่</button></div>
 <div id="msg"></div>
@@ -239,14 +268,31 @@ body.dark aside details .chip,body.dark aside details label,body.dark aside deta
 <div id="res"></div>
 <p style="font-size:11px;color:#64748b">This is an alpha test. Please expect that bugs and glitches may be occur.</p>
 </aside>
-<main><button id="sbTog" title="ซ่อน/แสดง sidebar (Ctrl+B)">◀</button><div id="selBar"><span><b id="selCount">0</b> เลือกแล้ว</span><button id="selDel" style="background:#dc2626;color:#fff;border-color:#b91c1c">🗑 ลบที่เลือก</button><button id="selClr" style="background:#475569;color:#fff;border-color:#334155">✕ ยกเลิก</button></div><div id="undoToast" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.4);z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;font-size:13px"></div><div id="savedBadge"></div><div id="map"></div><div id="mapOv"><button id="ovTog" title="หุบ/ขยาย panel">▲</button><button id="satBtn" title="สลับ Satellite / OSM">🛰️ Satellite</button><button id="dmsBtn" title="สลับรูปแบบพิกัด DMS / ทศนิยม">📐 DDMMSS</button><button id="rBtn2" title="แสดง/ซ่อนรัศมีคำขอ">⭕ รัศมี</button><button id="bndBtn" class="on" title="แสดง/ซ่อนขอบเขตจังหวัด AIP">🗺 AIP Bound</button><button id="pdrBtn" title="แสดง/ซ่อน เขต P/D/R/TRA">🚫 P/D/R</button><button id="encBtn" title="วงกลมล้อมคำขอทั้งหมด (auto)">⭕ รวมคำขอ - AUTO</button><button id="tlBtn" title="Timeline — เลื่อนดูคำขอตามเวลา">⏱ Timeline</button></div><div id="tlBar" style="display:none;position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:600;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);padding:10px 16px;min-width:min(560px,90%)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px"><span><b style="color:#2563eb">⏱ Timeline</b></span><span id="tlInfo" style="font-weight:600"></span><a href="#" id="tlClose" style="color:#dc2626;text-decoration:none">✕ ปิด</a></div><input id="tlSlide" type="range" min="0" max="1439" value="1140" step="5" style="width:100%;accent-color:#2563eb;cursor:pointer"><div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-top:2px"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:59</span></div></div><div id="resize" title="ลากเพื่อปรับขนาด"></div><div id="tbl"></div></main>
-<dialog id="help" style="width:min(720px,95vw)"><form method="dialog">
-<b>วิธีเตรียมข้อมูลจาก PDF ด้วย AI</b>
-<ol style="font-size:13px;padding-left:18px"><li>กด “คัดลอก Prompt”</li><li>เปิด AI ที่ใช้ (ChatGPT / Claude / Gemini ฯลฯ) แนบไฟล์ PDF แล้ววาง Prompt</li><li>คัดลอกตาราง CSV ที่ AI ตอบ → วางในช่อง “วางตาราง” หรือบันทึกเป็นไฟล์ .csv แล้วลากเข้ามา</li><li>ตรวจแถวสีเหลือง และสุ่มเทียบกับเอกสารต้นฉบับ (โดยเฉพาะพิกัดและรัศมี)</li></ol>
-<textarea id="prompt" readonly rows="13" style="width:100%;font:12px/1.4 monospace"></textarea>
-<div style="margin-top:6px"><button type="button" id="cpP">📋 คัดลอก Prompt</button><button type="button" id="tpl">⬇ ดาวน์โหลดตัวอย่าง CSV</button><button value="x">ปิด</button></div>
-<p style="font-size:11px;color:#64748b;margin:6px 0 0">คำเตือน: PDF ที่ส่งให้ AI มีข้อมูลส่วนบุคคล (เลขบัตร ที่อยู่ เบอร์โทร) ควรตรวจนโยบายของหน่วยงานก่อนใช้ AI ภายนอก · แอพนี้ทำงานในเครื่อง ไม่ส่งข้อมูลไปไหน (ยกเว้นปุ่มตรวจ อ./จ. ที่ส่งเฉพาะพิกัด)</p>
+<main><button id="sbTog" title="ซ่อน/แสดง sidebar (Ctrl+B)">◀</button><div id="selBar"><div class="row1"><span><b id="selCount">0</b> เลือกแล้ว</span><span id="selMix" style="font-size:12px"></span><button id="selEdit" style="background:#2563eb;color:#fff;border-color:#1d4ed8">✏️ แก้ไขรวม ▼</button><button id="selCopy" style="background:#0891b2;color:#fff;border-color:#0e7490" title="สร้างสำเนาของคำขอที่เลือก · selection จะย้ายไปที่สำเนาใหม่">📋 คัดลอก</button><button id="selDel" style="background:#dc2626;color:#fff;border-color:#b91c1c">🗑 ลบที่เลือก</button><button id="selClr" style="background:#475569;color:#fff;border-color:#334155">✕ ปิด</button></div><div id="selBatch"><label>📅 วันที่</label><input type="date" id="bD1"><label>ถึง</label><input type="date" id="bD2"><label>⏰ เวลา</label><input type="text" id="bT1" placeholder="19:00" maxlength="5"><label>ถึง</label><input type="text" id="bT2" placeholder="23:59" maxlength="5"><label>🏷️ ชนิด</label><select id="bType"><option value="">(ไม่เปลี่ยน)</option><option>โคมลอย</option><option>โคมไฟ</option><option>โคมควัน</option><option>พลุ</option><option>บั้งไฟ</option><option>ตะไล</option></select><label>👥 ผู้จัด</label><input type="text" id="bOrg" placeholder="(ไม่เปลี่ยน)"><label>📍 สถานที่</label><input type="text" id="bPlace" placeholder="(ไม่เปลี่ยน)"><label>⛰️ FT</label><input type="number" id="bFt" step="any" placeholder="(ไม่เปลี่ยน)"><label>⭕ รัศมี NM</label><input type="number" id="bRad" step="any" placeholder="(ไม่เปลี่ยน)"><label>📏 Ø นิ้ว</label><input type="number" id="bDia" step="any" placeholder="(ไม่เปลี่ยน)"><label>👤 ผู้ขอ</label><input type="text" id="bName" placeholder="(ไม่เปลี่ยน)"><label>📞 เบอร์โทร</label><input type="text" id="bTel" placeholder="(ไม่เปลี่ยน)"><label>🏘 อำเภอ</label><input type="text" id="bAmphoe" placeholder="(ไม่เปลี่ยน)"><label>🗺 จังหวัด</label><input type="text" id="bProv" placeholder="(ไม่เปลี่ยน)"><label>🔢 จำนวน</label><input type="number" id="bQty" step="any" placeholder="(ไม่เปลี่ยน)"><label>⚖️ น้ำหนัก</label><input type="text" id="bWt" placeholder="เช่น 55 กรัม"><div class="hint">กรอกเฉพาะช่องที่ต้องการแก้ · ช่องว่าง = คงค่าเดิมไว้ · ID/พิกัดต้องแก้ทีละแถว</div><div class="full"><button type="button" id="bClr" style="background:#475569;color:#fff;border-color:#334155">ล้างฟอร์ม</button><button type="button" id="bApply" style="background:#16a34a;color:#fff;border-color:#15803d">✓ นำไปใช้</button></div></div></div><div id="undoToast" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.4);z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;font-size:13px"></div><div id="savedBadge"></div><div id="map"></div><div id="mapOv"><button id="ovTog" title="หุบ/ขยาย panel">▲</button><button id="satBtn" title="สลับ Satellite / OSM">🛰️ Satellite</button><button id="dmsBtn" title="สลับรูปแบบพิกัด DMS / ทศนิยม">📐 DDMMSS</button><button id="rBtn2" title="แสดง/ซ่อนรัศมีคำขอ">⭕ รัศมี</button><button id="bndBtn" class="on" title="แสดง/ซ่อนขอบเขตจังหวัด AIP">🗺 AIP Bound</button><button id="pdrBtn" title="แสดง/ซ่อน เขต P/D/R/TRA">🚫 P/D/R</button><button id="encBtn" title="วงกลมล้อมคำขอทั้งหมด (auto)">⭕ รวมคำขอ - AUTO</button><button id="tlBtn" title="Timeline — เลื่อนดูคำขอตามเวลา">⏱ Timeline</button></div><div id="tlBar" style="display:none;position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:600;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);padding:10px 16px;min-width:min(560px,90%)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px"><span><b style="color:#2563eb">⏱ Timeline</b></span><span id="tlInfo" style="font-weight:600"></span><a href="#" id="tlClose" style="color:#dc2626;text-decoration:none">✕ ปิด</a></div><input id="tlSlide" type="range" min="0" max="1439" value="1140" step="5" style="width:100%;accent-color:#2563eb;cursor:pointer"><div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-top:2px"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:59</span></div></div><div id="resize" title="ลากเพื่อปรับขนาด"></div><div id="tbl"></div></main>
+<dialog id="help" style="width:min(560px,95vw)"><form method="dialog">
+<b style="font-size:15px">⚠️ คำเตือนเมื่อนำข้อมูลจาก AI มาใช้</b>
+<div class="pdpaWarn">
+  <b>ข้อควรระวังด้าน PDPA</b><br>
+  หากคุณนำข้อมูลที่ให้ AI ภายนอกช่วยสกัดจากเอกสาร <b>กรุณาตรวจสอบว่าได้ลบ/ปิดข้อมูลส่วนบุคคล</b> (เลขบัตรประชาชน ที่อยู่ ลายเซ็น) <b>ก่อนส่งให้ AI</b><br>
+  แนะนำให้ใช้งานผ่าน <b>ควรใช้งานผ่าน AI Copilot ของบริษัทเท่านั้น</b><br>
+  <b>ผู้ใช้รับผิดชอบข้อมูลที่ส่งออกไปทั้งหมด</b> — ผู้จัดทำแอพไม่รับผิดชอบต่อข้อมูลที่ผู้ใช้ส่งไปยัง AI บุคคลที่สาม
+</div>
+<p style="font-size:13px;margin:8px 0 4px"><b>วิธีใช้งานช่องวางตาราง:</b></p>
+<ol style="font-size:13px;padding-left:18px;margin:0 0 8px"><li>คัดลอกตาราง CSV จากแหล่งข้อมูล</li><li>วางในช่อง "วางตาราง CSV" ด้านนอก แล้วกด "นำเข้าตาราง CSV"</li><li>หัวคอลัมน์ต้องตรงกับรูปแบบ — ดาวน์โหลดตัวอย่างได้ที่ปุ่มด้านล่าง</li><li>ตรวจแถวสีเหลือง และสุ่มเทียบกับเอกสารต้นฉบับ (โดยเฉพาะพิกัดและรัศมี)</li></ol>
+<div style="margin-top:6px"><button type="button" id="tpl">⬇ ดาวน์โหลดตัวอย่าง CSV</button><button value="x">ปิด</button></div>
+<p style="font-size:11px;color:#64748b;margin:6px 0 0">แอพนี้ทำงานในเครื่อง ไม่ส่งข้อมูลออกเอง (ยกเว้นปุ่มตรวจ อ./จ. ที่ส่งเฉพาะพิกัด) · การส่ง PDF ให้ AI เป็นการกระทำของผู้ใช้เอง</p>
 </form></dialog>
+<dialog id="aiConfirm" style="width:min(520px,95vw);padding:18px 22px">
+<b style="font-size:15px;color:#92400e">⚠️ ยืนยันก่อนนำเข้าข้อมูลจาก AI</b>
+<div class="pdpaWarn" style="margin-top:10px">
+  <b>ข้อควรระวังด้าน PDPA</b><br>
+  หากข้อมูลที่กำลังนำเข้ามาจาก AI ภายนอก กรุณาตรวจสอบว่าได้<b>ลบ/ปิดข้อมูลส่วนบุคคล</b> (เลขบัตรประชาชน ที่อยู่ ลายเซ็น) <b>ก่อนส่งให้ AI</b> แล้ว<br>
+  แนะนำให้ใช้งานผ่าน <b>AI Copilot ของหน่วยงานเท่านั้น</b><br>
+  <b>ผู้ใช้รับผิดชอบข้อมูลที่ส่งออกไปทั้งหมด</b> — ผู้จัดทำแอพไม่รับผิดชอบต่อข้อมูลที่ผู้ใช้ส่งไปยัง AI บุคคลที่สาม
+</div>
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:12px 0 6px"><input type="checkbox" id="aiSkip" style="width:16px;height:16px;cursor:pointer"><span>ไม่ต้องเตือนอีกใน session นี้</span></label>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button type="button" id="aiCancel">ยกเลิก</button><button type="button" id="aiOk" style="background:#16a34a;color:#fff;border-color:#15803d;font-weight:600">✓ เข้าใจ, นำเข้าข้อมูล</button></div>
+</dialog>
 <dialog id="qpDlg" style="width:min(520px,95vw);padding:18px 22px">
 <div id="qpForm">
 <h2 style="margin:0 0 10px;color:#1d4ed8">⚡ Quick Plot — เพิ่มคำขอด่วน</h2>
@@ -317,14 +363,18 @@ body.dark aside details .chip,body.dark aside details label,body.dark aside deta
 const $=i=>document.getElementById(i),NM=1852,CAT={'โคม':'#e67e22','พลุ':'#8e44ad','บั้งไฟ':'#c0392b','ตะไล':'#16a085','อื่นๆ':'#64748b'};
 const undoStack=[];let undoTimer=null;
 const sel=new Set();
-function updSelBar(){const b=$('selBar'),n=sel.size;if(n>0){b.classList.add('on');$('selCount').textContent=n}else b.classList.remove('on')}
+function updSelBar(){const b=$('selBar'),n=sel.size;if(n>0){b.classList.add('on');$('selCount').textContent=n;
+ const types={};[...sel].forEach(k=>{const r=recs.find(x=>key(x)===k);if(r){const t=r.type||'(ไม่ระบุ)';types[t]=(types[t]||0)+1}});
+ const uniq=Object.keys(types),mix=uniq.length>1;
+ const info=$('selMix');if(info){info.innerHTML=mix?`<span style="color:#fbbf24;font-weight:600" title="คำขอที่เลือกมีชนิดต่างกัน · ระวังตอนแก้ไขชนิดรวม">⚠️ วัตถุชนิดต่างกัน: ${Object.entries(types).map(([t,c])=>`${t}×${c}`).join(', ')}</span>`:(uniq.length===1?`<span style="color:#94a3b8">ชนิด: ${uniq[0]}</span>`:'')}
+}else{b.classList.remove('on');b.classList.remove('editing');$('selEdit').textContent='✏️ แก้ไขรวม ▼'}}
 function showUndoToast(name){const t=$('undoToast');if(!t)return;t.innerHTML=`🗑 ลบ <b>${name}</b> แล้ว · <a href="#" id="undoLink" style="color:#60a5fa;font-weight:700">↶ เลิกทำ</a> <span style="color:#94a3b8;font-size:11px">(หายใน 10 วิ)</span>`;t.style.transform='translateX(-50%) translateY(0)';t.style.opacity='1';clearTimeout(undoTimer);undoTimer=setTimeout(()=>{t.style.transform='translateX(-50%) translateY(80px)';t.style.opacity='0';undoStack.length=0},10000);$('undoLink').onclick=e=>{e.preventDefault();doUndo()}}
 function doUndo(){if(!undoStack.length)return;const{rec,idx}=undoStack.pop();recs.splice(Math.min(idx,recs.length),0,rec);clearTimeout(undoTimer);$('undoToast').style.transform='translateX(-50%) translateY(80px)';$('undoToast').style.opacity='0';refresh()}
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&undoStack.length&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();doUndo()}});
 window.addEventListener('beforeunload',e=>{if(recs.length>0){e.preventDefault();return e.returnValue='ยังมีข้อมูลคำขอ '+recs.length+' รายการ · ปิดจะหายทั้งหมด (แนะนำส่งออกก่อน)'}});
 const catOf=t=>/โคม/.test(t)?'โคม':(CAT[t]?t:'อื่นๆ'),toIn=(v,u)=>/ซม|cm/i.test(u)?v/2.54:/เมตร|ม\./.test(u)?v*39.3701:v;
 const f1=(x,d=2)=>x==null||isNaN(x)?'-':(+x).toFixed(d);
-let dmsFmt=false;
+let dmsFmt=true;
 const toDMS=(deg,isLat)=>{const a=Math.abs(deg),d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60,dir=isLat?(deg>=0?'N':'S'):(deg>=0?'E':'W'),dd=String(d).padStart(isLat?2:3,'0');return`${dd}${String(m).padStart(2,'0')}${s.toFixed(2).padStart(5,'0')}${dir}`};
 const fmtLL=(lat,lng,dp=6)=>dmsFmt?`${toDMS(lat,true)}${toDMS(lng,false)}`:`${lat.toFixed(dp)}, ${lng.toFixed(dp)}`;
 let recs=[];localStorage.removeItem('recs');
@@ -336,7 +386,7 @@ const labelTile=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/service
 osmTile.addTo(map);
 L.control.scale({imperial:false,metric:false}).addTo(map);
 const lay=L.layerGroup().addTo(map);let mk_={},off=new Set(),offD=new Set(),offH=new Set(),offAIP=new Set(),hid=new Set(),hidR=new Set(),sortK=null,sortD=1,encShow=false;
-const encLay=L.layerGroup().addTo(map);
+const encLay=L.layerGroup().addTo(map);let encInfo=null;
 const AIP_SUP={provinces:['เชียงใหม่','ลำพูน'],windows:[{date:'2026-11-24',from:'03:00',to:'05:00'},{date:'2026-11-24',from:'12:00',to:'18:00'},{date:'2026-11-25',from:'12:00',to:'18:00'}]};
 function aipStatus(r){if(r.cat!=='โคม')return'na';if(!AIP_SUP.provinces.includes(r.prov))return'out';if(!r.d1||!r.t1)return'out';const t2=r.t2||r.t1;const rs=Date.parse(`${r.d1}T${r.t1}:00+07:00`);let re=Date.parse(`${r.d1}T${t2}:00+07:00`);if(isNaN(rs)||isNaN(re))return'out';if(re<rs)re+=864e5;for(const w of AIP_SUP.windows){const ws=Date.parse(`${w.date}T${w.from}:00Z`),we=Date.parse(`${w.date}T${w.to}:00Z`);if(rs<we&&re>ws)return'in'}return'out'}
 const aipBoundLay=L.layerGroup().addTo(map);
@@ -354,7 +404,7 @@ const normT=s=>{if(!s)return'';const t=String(s).replace(/[^\d]/g,'');if(!t)retu
 function view(){const q=$('q').value.trim(),tf=$('tFrom').value,tt=$('tTo').value,fp=$('fProv').value,fa=$('fAmphoe').value;return recs.filter(r=>{const ds=datesOf(r);if(off.has(r.cat))return false;if(ds.length&&!ds.some(d=>!offD.has(d)))return false;if(tf&&r.t1&&r.t1<tf)return false;if(tt&&r.t1&&r.t1>tt)return false;if(offH.has(hKey(r)))return false;const a=aipStatus(r);if(a!=='na'&&offAIP.has(a))return false;if(fp&&r.prov!==fp)return false;if(fa&&r.amphoe!==fa)return false;if(tlOn&&!tlActive(r))return false;return !q||[r.id,r.name,r.place,r.amphoe,r.prov,r.type].join(' ').includes(q)})}
 function refresh(){
  const v=view();lay.clearLayers();mk_={};encLay.clearLayers();
- if(encShow){const vis=v.filter(r=>!hid.has(key(r)));if(vis.length>=2){const lats=vis.map(r=>r.lat),lngs=vis.map(r=>r.lng);const cLat=(Math.min(...lats)+Math.max(...lats))/2,cLng=(Math.min(...lngs)+Math.max(...lngs))/2;let encR=0;vis.forEach(r=>{const d=Math.sqrt(Math.pow((r.lat-cLat)*60,2)+Math.pow((r.lng-cLng)*60*Math.cos(cLat*Math.PI/180),2))+(r.rNM||0);if(d>encR)encR=d});L.circle([cLat,cLng],{radius:encR*NM,color:'#1d4ed8',weight:2.5,dashArray:'8,6',fill:false,interactive:false}).addTo(encLay);{const dmsStr=`${toDMS(cLat,true)} ${toDMS(cLng,false)}`,decStr=`${cLat.toFixed(6)}, ${cLng.toFixed(6)}`,radStr=f1(encR,2),fullStr=`RADIUS ${radStr} NM CENTRE ${dmsStr}`;L.circleMarker([cLat,cLng],{radius:6,color:'#1d4ed8',weight:2,fillColor:'#fff',fillOpacity:1}).bindPopup(`<div style="font-size:13px;min-width:230px"><b style="color:#1d4ed8">⭕ วงรวมคำขอ</b> <span style="color:#64748b">(${vis.length} คำขอ)</span><br><br><b>CENTRE (DMS)</b><br><span style="font:13px monospace;font-weight:600">${dmsStr}</span> <a href="#" data-cp="${dmsStr}" style="color:#2563eb">⧉</a><br><br><b>CENTRE (ทศนิยม)</b><br><span style="font:12px monospace">${decStr}</span> <a href="#" data-cp="${decStr}" style="color:#2563eb">⧉</a><br><br><b>RADIUS</b> <span style="font-weight:700;color:#1d4ed8">${radStr} NM</span> <a href="#" data-cp="${radStr}" style="color:#2563eb">⧉</a><br><br><a href="#" data-cp="${fullStr}" style="color:#16a34a;font-weight:700">📋 คัดลอกทั้งหมด</a></div>`).on('popupopen',e=>{e.popup.getElement().querySelectorAll('a[data-cp]').forEach(a=>a.onclick=ev=>{ev.preventDefault();navigator.clipboard?.writeText(a.dataset.cp);const o=a.textContent;a.textContent='✓';setTimeout(()=>a.textContent=o,1200)})}).addTo(encLay)}}}
+ encInfo=null;if(encShow){const vis=v.filter(r=>!hid.has(key(r)));if(vis.length>=2){const lats=vis.map(r=>r.lat),lngs=vis.map(r=>r.lng);const cLat=(Math.min(...lats)+Math.max(...lats))/2,cLng=(Math.min(...lngs)+Math.max(...lngs))/2;let encR=0;vis.forEach(r=>{const d=Math.sqrt(Math.pow((r.lat-cLat)*60,2)+Math.pow((r.lng-cLng)*60*Math.cos(cLat*Math.PI/180),2))+(r.rNM||0);if(d>encR)encR=d});encInfo={lat:cLat,lng:cLng,r:encR,n:vis.length};L.circle([cLat,cLng],{radius:encR*NM,color:'#1d4ed8',weight:2.5,dashArray:'8,6',fill:false,interactive:false}).addTo(encLay);{const dmsStr=`${toDMS(cLat,true)} ${toDMS(cLng,false)}`,decStr=`${cLat.toFixed(6)}, ${cLng.toFixed(6)}`,radStr=f1(encR,2),fullStr=`RADIUS ${radStr} NM CENTRE ${dmsStr}`;L.circleMarker([cLat,cLng],{radius:6,color:'#1d4ed8',weight:2,fillColor:'#fff',fillOpacity:1}).bindPopup(`<div style="font-size:13px;min-width:230px"><b style="color:#1d4ed8">⭕ วงรวมคำขอ</b> <span style="color:#64748b">(${vis.length} คำขอ)</span><br><br><b>CENTRE (DMS)</b><br><span style="font:13px monospace;font-weight:600">${dmsStr}</span> <a href="#" data-cp="${dmsStr}" style="color:#2563eb">⧉</a><br><br><b>CENTRE (ทศนิยม)</b><br><span style="font:12px monospace">${decStr}</span> <a href="#" data-cp="${decStr}" style="color:#2563eb">⧉</a><br><br><b>RADIUS</b> <span style="font-weight:700;color:#1d4ed8">${radStr} NM</span> <a href="#" data-cp="${radStr}" style="color:#2563eb">⧉</a><br><br><a href="#" data-cp="${fullStr}" style="color:#16a34a;font-weight:700">📋 คัดลอกทั้งหมด</a></div>`).on('popupopen',e=>{e.popup.getElement().querySelectorAll('a[data-cp]').forEach(a=>a.onclick=ev=>{ev.preventDefault();navigator.clipboard?.writeText(a.dataset.cp);const o=a.textContent;a.textContent='✓';setTimeout(()=>a.textContent=o,1200)})}).addTo(encLay)}}}
  v.forEach(r=>{if(hid.has(key(r)))return;const c=CAT[r.cat]||'#555';
   if($('showR').checked&&r.rNM&&!hidR.has(key(r)))L.circle([r.lat,r.lng],{radius:r.rNM*NM,color:c,weight:2.5,fillOpacity:.08,interactive:false}).addTo(lay);
   mk_[key(r)]=L.circleMarker([r.lat,r.lng],{radius:8,color:'#fff',weight:2,fillColor:c,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop(r)).bindTooltip(r.type+' · '+r.place).addTo(lay)});
@@ -370,15 +420,20 @@ function refresh(){
   $('fProv').innerHTML='<option value="">จังหวัด (ทั้งหมด)</option>'+provs.map(p=>`<option value="${p}"${p===selP?' selected':''}>${p}</option>`).join('');
   $('fAmphoe').innerHTML='<option value="">อำเภอ (ทั้งหมด)</option>'+amphs.map(a=>`<option value="${a}"${a===selA?' selected':''}>${a}</option>`).join('');}
  if(sortK)v.sort((a,b)=>(a[sortK]>b[sortK]?1:-1)*sortD);
+ const _jc=k=>justCopied.has(k)?'just-copied ':'';
  const allOn=v.length&&v.every(r=>!hid.has(key(r)));
  {const nV=v.length,nT=recs.length,nW=v.filter(r=>r.warn).length,nX=v.filter(r=>!hid.has(key(r))).length,nIn=v.filter(r=>aipStatus(r)==='in').length,nOut=v.filter(r=>aipStatus(r)==='out').length;$('summary').innerHTML=nT?`📊 ทั้งหมด <b>${nT}</b> คำขอ · แสดง <b>${nV}</b>${nV!==nT?` <span style="color:#64748b">(ซ่อน ${nT-nV})</span>`:''} · ส่งออก <b>${nX}</b>${nW?` · <span style="color:#b45309">⚠️ ${nW} warning</span>`:''}${nIn?` · <span style="color:#16a34a">● AIP in: ${nIn}</span>`:''}${nOut?` · <span style="color:#dc2626">● AIP out: ${nOut}</span>`:''}`:''}
- $('tbl').innerHTML=`<table><tr><th><input type="checkbox" id="allv" title="แสดง/ซ่อนทั้งหมดบนแผนที่" ${allOn?'checked':''}></th>${cols.map((c,i)=>`<th draggable="true" data-s="${c[0]}" data-ci="${i}" title="คลิกเพื่อเรียง · ลากเพื่อสลับตำแหน่ง">⋮⋮ ${c[1]}</th>`).join('')}<th style="text-align:center">จัดการคำขอ</th></tr>`+(v.length?'':`<tr><td colspan=${cols.length+2} style="padding:28px 18px;text-align:center;color:#64748b;font-size:14px"><div style="font-size:16px;margin-bottom:8px">👋 ยินดีต้อนรับ — เริ่มต้นด้วยวิธีใดวิธีหนึ่ง:</div><div style="display:inline-flex;gap:30px;flex-wrap:wrap;justify-content:center;margin-top:4px"><div>⬅️ <b>ลากไฟล์ CSV/Excel</b><br><span style="font-size:12px">มาวางที่ช่องด้านซ้าย</span></div><div>⬅️ <b>กดปุ่ม "+ เพิ่มคำขอด้วยตนเอง"</b> <span style="color:#22c55e;font-size:20px">●</span><br><span style="font-size:12px">(ไฮไลต์สีเขียวในแถบซ้าย)</span></div></div></td></tr>`)+v.map(r=>{const _a=aipStatus(r);return `<tr data-k="${key(r)}" class="${_a==='in'?'aip-in ':_a==='out'?'aip-out ':''}${r.warn?'warn-row ':''}${sel.has(key(r))?'sel':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td><input type="checkbox" data-v="${key(r)}" ${hid.has(key(r))?'':'checked'}></td>${cols.map(c=>CELL[c[0]](r)).join('')}<td style="white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:10px"><span style="display:inline-block;width:18px;text-align:center">${r.warn?`<span title="${r.warn}" style="color:#f59e0b">⚠️</span>`:`<span title="ไม่พบข้อมูลผิดปกติ" style="color:#16a34a;font-weight:700">✓</span>`}</span><a href="#" data-rt="${key(r)}" title="เปิด/ปิดวงรัศมีบนแผนที่" style="opacity:${hidR.has(key(r))?.3:1};text-decoration:none">⭕</a><a href="#" data-e="${key(r)}" title="แก้ไข" style="text-decoration:none">✎ แก้ไข</a><a href="#" data-d="${key(r)}" title="ลบ" style="color:#dc2626;text-decoration:none">✕ ลบ</a></span></td></tr>`}).join('')+'</table>';
+ const allSel=v.length&&v.every(r=>sel.has(key(r)));
+ $('tbl').innerHTML=`<table><tr><th class="col-sel" title="เลือกทั้งหมดเพื่อแก้ไขรวม / ลบ"><div>✏️ แก้</div><input class="cb-sel" type="checkbox" id="allsel" ${allSel?'checked':''}></th><th class="col-vis" title="แสดง/ซ่อนทั้งหมดบนแผนที่"><div>👁 แผนที่</div><input class="cb-vis" type="checkbox" id="allv" ${allOn?'checked':''}></th>${cols.map((c,i)=>`<th draggable="true" data-s="${c[0]}" data-ci="${i}" title="คลิกเพื่อเรียง · ลากเพื่อสลับตำแหน่ง">⋮⋮ ${c[1]}</th>`).join('')}<th style="text-align:center">จัดการคำขอ</th></tr>`+(v.length?'':`<tr><td colspan=${cols.length+3} style="padding:28px 18px;text-align:center;color:#64748b;font-size:14px"><div style="font-size:16px;margin-bottom:8px">👋 ยินดีต้อนรับ — เริ่มต้นด้วยวิธีใดวิธีหนึ่ง:</div><div style="display:inline-flex;gap:30px;flex-wrap:wrap;justify-content:center;margin-top:4px"><div>⬅️ <b>ลากไฟล์ CSV/Excel</b><br><span style="font-size:12px">มาวางที่ช่องด้านซ้าย</span></div><div>⬅️ <b>กดปุ่ม "+ เพิ่มคำขอด้วยตนเอง"</b> <span style="color:#22c55e;font-size:20px">●</span><br><span style="font-size:12px">(ไฮไลต์สีเขียวในแถบซ้าย)</span></div></div></td></tr>`)+v.map(r=>{const _a=aipStatus(r);return `<tr data-k="${key(r)}" class="${_a==='in'?'aip-in ':_a==='out'?'aip-out ':''}${r.warn?'warn-row ':''}${_jc(key(r))}${sel.has(key(r))?'sel':''}" style="${hid.has(key(r))?'opacity:.45':''}"><td class="cell-sel"><input class="cb-sel" type="checkbox" data-sel="${key(r)}" title="เลือกเพื่อแก้ไขรวม / ลบ" ${sel.has(key(r))?'checked':''}></td><td class="cell-vis"><input class="cb-vis" type="checkbox" data-v="${key(r)}" title="แสดงบนแผนที่" ${hid.has(key(r))?'':'checked'}></td>${cols.map(c=>CELL[c[0]](r)).join('')}<td style="white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:10px"><span style="display:inline-block;width:18px;text-align:center">${r.warn?`<span title="${r.warn}" style="color:#f59e0b">⚠️</span>`:`<span title="ไม่พบข้อมูลผิดปกติ" style="color:#16a34a;font-weight:700">✓</span>`}</span><a href="#" data-rt="${key(r)}" title="เปิด/ปิดวงรัศมีบนแผนที่" style="opacity:${hidR.has(key(r))?.3:1};text-decoration:none">⭕</a><a href="#" data-e="${key(r)}" title="แก้ไข" style="text-decoration:none">✎ แก้ไข</a><a href="#" data-d="${key(r)}" title="ลบ" style="color:#dc2626;text-decoration:none">✕ ลบ</a></span></td></tr>`}).join('')+'</table>';
+ if(typeof panel==='function')panel();
 }
 document.addEventListener('change',e=>{const d=e.target.dataset;
  if(d.dt){e.target.checked?offD.delete(d.dt):offD.add(d.dt);return refresh()}
  if(d.ht){e.target.checked?offH.delete(d.ht):offH.add(d.ht);return refresh()}
  if(d.aip){e.target.checked?offAIP.delete(d.aip):offAIP.add(d.aip);return refresh()}
  if(d.v){e.target.checked?hid.delete(d.v):hid.add(d.v);return refresh()}
+ if(d.sel){e.target.checked?sel.add(d.sel):sel.delete(d.sel);refresh();return updSelBar()}
+ if(e.target.id==='allsel'){view().forEach(r=>e.target.checked?sel.add(key(r)):sel.delete(key(r)));refresh();return updSelBar()}
  if(e.target.id==='allv'){view().forEach(r=>e.target.checked?hid.delete(key(r)):hid.add(key(r)));return refresh()}
  if(e.target.dataset.c){e.target.checked?off.delete(e.target.dataset.c):off.add(e.target.dataset.c);refresh()}});
 const allDates=()=>{const o=new Set();recs.forEach(r=>datesOf(r).forEach(d=>o.add(d)));return o};
@@ -412,6 +467,7 @@ $('tlClose').onclick=e=>{e.preventDefault();tlOn=false;$('tlBtn').classList.remo
 $('tlSlide').oninput=updTL;
 $('ovTog').onclick=()=>{const c=$('mapOv').classList.toggle('collapsed');$('ovTog').innerHTML=c?'▼ Tools':'▲';localStorage.setItem('ovCol',c?'1':'0')};
 {const saved=localStorage.getItem('ovCol');const col=saved!==null?saved==='1':innerWidth<900;if(col){$('mapOv').classList.add('collapsed');$('ovTog').innerHTML='▼ Tools'}}
+$('dmsBtn').classList.toggle('on',dmsFmt);
 $('dmsBtn').onclick=()=>{dmsFmt=!dmsFmt;$('dmsBtn').classList.toggle('on',dmsFmt);refresh();panel()};
 $('satBtn').onclick=()=>{if(map.hasLayer(satTile)){map.removeLayer(satTile);map.removeLayer(labelTile);osmTile.addTo(map);$('satBtn').textContent='🛰️ Satellite'}else{map.removeLayer(osmTile);satTile.addTo(map);labelTile.addTo(map);$('satBtn').textContent='🗺️ OSM'}};
 $('tFrom').onblur=$('tTo').onblur=e=>{e.target.value=normT(e.target.value);rf()};
@@ -429,8 +485,32 @@ $('tbl').onclick=e=>{const t=e.target,k=t.dataset.e||t.dataset.d;
  if(t.tagName==='INPUT')return;const tr=t.closest('tr[data-k]');if(!tr)return;
  if(e.ctrlKey||e.metaKey||e.shiftKey){e.preventDefault();const k2=tr.dataset.k;sel.has(k2)?sel.delete(k2):sel.add(k2);refresh();updSelBar();return}
  if(mk_[tr.dataset.k]){const m=mk_[tr.dataset.k];map.flyTo(m.getLatLng(),15);m.openPopup()}};
-$('selClr').onclick=()=>{sel.clear();refresh();updSelBar()};
+$('selClr').onclick=()=>{sel.clear();$('selBar').classList.remove('editing');$('selEdit').textContent='✏️ แก้ไขรวม ▼';refresh();updSelBar()};
 $('selDel').onclick=()=>{if(!sel.size)return;if(!confirm(`ลบ ${sel.size} คำขอที่เลือก?`))return;const toDel=[...sel];toDel.forEach(k=>{const idx=recs.findIndex(r=>key(r)===k);if(idx>=0)recs.splice(idx,1)});sel.clear();refresh();updSelBar()};
+$('selEdit').onclick=()=>{const b=$('selBar'),on=b.classList.toggle('editing');$('selEdit').textContent=on?'✏️ แก้ไขรวม ▲':'✏️ แก้ไขรวม ▼'};
+const justCopied=new Set();
+$('selCopy').onclick=()=>{if(!sel.size)return;const src=[...sel].map(k=>recs.find(x=>key(x)===k)).filter(Boolean);if(!src.length)return;
+ const newKeys=[];src.forEach(r=>{const copy={...r,uid:uid()};recs.push(copy);newKeys.push(key(copy))});
+ sel.clear();newKeys.forEach(k=>{sel.add(k);justCopied.add(k)});refresh();updSelBar();msg(`📋 คัดลอก ${newKeys.length} คำขอแล้ว · selection ย้ายไปที่สำเนาใหม่ · กด "✏️ แก้ไขรวม" เพื่อปรับแก้`);
+ const firstNew=document.querySelector(`tr[data-k="${newKeys[0]}"]`);if(firstNew)firstNew.scrollIntoView({behavior:'smooth',block:'center'});
+ setTimeout(()=>{newKeys.forEach(k=>justCopied.delete(k));refresh()},2500)};
+$('bClr').onclick=()=>{['bD1','bD2','bT1','bT2','bOrg','bPlace','bFt','bRad','bDia','bName','bTel','bAmphoe','bProv','bQty','bWt'].forEach(id=>$(id).value='');$('bType').value=''};
+$('bApply').onclick=()=>{if(!sel.size){alert('ไม่มีคำขอที่เลือก');return}
+ const d1=$('bD1').value,d2=$('bD2').value,t1=normT($('bT1').value),t2=normT($('bT2').value),type=$('bType').value,org=$('bOrg').value.trim(),place=$('bPlace').value.trim(),ft=$('bFt').value,rad=$('bRad').value,dia=$('bDia').value,name=$('bName').value.trim(),tel=$('bTel').value.trim(),amphoe=$('bAmphoe').value.trim(),prov=$('bProv').value.trim(),qty=$('bQty').value,wt=$('bWt').value.trim();
+ const changes=[];if(d1)changes.push('d1');if(d2)changes.push('d2');if(t1)changes.push('t1');if(t2)changes.push('t2');if(type)changes.push('type');if(org)changes.push('org');if(place)changes.push('place');if(ft!=='')changes.push('ft');if(rad!=='')changes.push('rad');if(dia!=='')changes.push('dia');if(name)changes.push('name');if(tel)changes.push('tel');if(amphoe)changes.push('amphoe');if(prov)changes.push('prov');if(qty!=='')changes.push('qty');if(wt)changes.push('wt');
+ if(!changes.length){alert('ยังไม่ได้กรอกค่าใดๆ');return}
+ if(type){const selRecs=[...sel].map(k=>recs.find(x=>key(x)===k)).filter(Boolean);const tCount={};selRecs.forEach(r=>{const t=r.type||'(ไม่ระบุ)';tCount[t]=(tCount[t]||0)+1});const uniq=Object.keys(tCount);if(uniq.length>1||(uniq.length===1&&uniq[0]!==type)){const breakdown=Object.entries(tCount).map(([t,n])=>`${t}: ${n}`).join(', ');if(!confirm(`⚠️ คำขอที่เลือกมีชนิดต่างกัน:\n${breakdown}\n\nจะเปลี่ยน "ทั้งหมด" เป็น "${type}"\nยืนยันหรือไม่?`))return}}
+ if(!confirm(`แก้ไข ${changes.length} ค่า ให้กับ ${sel.size} คำขอที่เลือก?`))return;
+ let n=0;sel.forEach(k=>{const r=recs.find(x=>key(x)===k);if(!r)return;
+  if(d1)r.d1=d1;if(d2)r.d2=d2;if(t1)r.t1=t1;if(t2)r.t2=t2;
+  if(type){r.type=type;r.cat=catOf(type)}
+  if(org)r.org=org;if(place)r.place=place;
+  if(ft!=='')r.ft=+ft;if(rad!=='')r.rNM=+rad;if(dia!=='')r.dIn=+dia;
+  if(name)r.name=name;if(tel)r.tel=tel;if(amphoe)r.amphoe=amphoe;if(prov)r.prov=prov;
+  if(qty!=='')r.qty=+qty;if(wt)r.wt=wt;
+  r.date=r.d1?(r.d2&&r.d2!==r.d1?thD(r.d1)+' – '+thD(r.d2):thD(r.d1)):'';
+  r.time=r.t1&&r.t2?r.t1+'-'+r.t2:(r.t1||'');n++});
+ refresh();msg(`✓ แก้ไข ${n} คำขอแล้ว (${changes.length} ค่า)`);$('bClr').click()};
 let dragI=null;
 $('tbl').addEventListener('dragstart',e=>{const th=e.target.closest('th[data-ci]');if(!th)return;dragI=+th.dataset.ci;th.classList.add('drag');e.dataTransfer.effectAllowed='move'});
 $('tbl').addEventListener('dragover',e=>{const th=e.target.closest('th[data-ci]');if(!th||dragI==null)return;e.preventDefault();$('tbl').querySelectorAll('th.over').forEach(x=>x.classList.remove('over'));th.classList.add('over')});
@@ -517,45 +597,6 @@ $('qpAgain').onclick=()=>qpReset();
 $('f').onsubmit=e=>{if(e.submitter.value!=='ok')return;const f=e.target;const _lat=dms(f.lat.value),_lng=dms(f.lng.value);if(_lat==null||_lng==null||isNaN(_lat)||isNaN(_lng)){alert('พิกัดไม่ถูกต้อง — รองรับทศนิยม (18.9012) หรือ DDMMSS (185404.61N)');return};const d1=f.d1.value,d2=f.d2.value||d1,t1=normT(f.t1.value),t2=normT(f.t2.value);const dateStr=d1?(d2&&d2!==d1?thD(d1)+' – '+thD(d2):thD(d1)):'';const timeStr=t1&&t2?t1+'-'+t2:(t1||'');const o={id:f.id.value,type:f.type.value,cat:catOf(f.type.value),name:f.name.value,org:f.org.value,tel:f.tel.value,place:f.place.value,amphoe:f.amphoe.value,prov:f.prov.value,lat:_lat,lng:_lng,dIn:toIn(+f.dia.value,f.du.value),ft:f.ft.value?+f.ft.value:null,rNM:+f.rad.value,qty:f.qty.value,wt:f.wt.value,d1,d2,t1,t2,date:dateStr,time:timeStr,warn:''};
  if(cur){_dc.delete(cur);Object.assign(cur,o)}else{o.uid=uid();recs.push(o)}refresh()};
 // ---- นำเข้าข้อมูล CSV / Excel / ข้อความที่วาง
-const PROMPT=`คุณเป็นผู้ช่วยดึงข้อมูลจากเอกสาร "แบบรับรองพิกัดพื้นที่ใช้ประกอบกิจกรรมเพื่อประกอบการพิจารณาอนุญาตให้จุดและปล่อยบั้งไฟ โคมลอย โคมไฟ โคมควัน" ที่แนบมา (1 หน้า = 1 คำขอ)
-
-งาน: อ่านทุกหน้า แล้วสร้างตาราง CSV เดียว 1 แถวต่อ 1 หน้า
-
-# หัวคอลัมน์ (ใช้ชื่อและลำดับนี้ เท่านั้น)
-เลขที่คำขอ,ชนิด,ผู้ขอใบอนุญาต,ผู้จัดกิจกรรม,เบอร์โทรศัพท์,สถานที่,อำเภอ,จังหวัด,ละติจูด,ลองจิจูด,องศาละติจูด,องศาลองจิจูด,เส้นผ่านศูนย์กลาง(นิ้ว),ความสูง(ฟุต),รัศมี(NM),จำนวน,น้ำหนัก,วันที่เริ่ม,วันที่สิ้นสุด,เวลาเริ่ม,เวลาสิ้นสุด,หมายเหตุ
-
-# ข้อกำหนดในแต่ละคอลัมน์
-- เลขที่คำขอ: เลขที่ท้ายหน้า เช่น RQ79/2569 — ถ้าอ่านไม่ออกหรือตัวเลขไม่ชัดเจน ให้ใส่ว่า ไม่สามารถอ่านหมายเลขได้ (ห้ามเดาหรือสร้างเลขขึ้นมาเอง)
-- ชนิด: ต้องเป็นหนึ่งในนี้เท่านั้น: โคมลอย, โคมไฟ, โคมควัน, พลุ, บั้งไฟ, ตะไล (ใช้ชนิดที่เขียนในช่อง "ขอรับใบอนุญาตให้จุดและปล่อยชนิด")
-- ผู้ขอใบอนุญาต: ชื่อจากช่อง "ข้าพเจ้า" ตัดคำนำหน้าออก
-- ผู้จัดกิจกรรม: รายชื่อจากหัวข้อ "โดยมีผู้ประกอบการจัดกิจกรรม" คั่นแต่ละชื่อด้วย / ถ้าไม่มีให้เว้นว่าง — ต้องครอบค่าด้วยเครื่องหมายคำพูดคู่เสมอ เช่น "สมชาย ดี / สมหญิง งาม" เนื่องจากอาจมีเครื่องหมาย , ในชื่อ
-- เบอร์โทรศัพท์: เบอร์โทรจากช่อง "โทรศัพท์" ของผู้ขอใบอนุญาต (ใช้สำหรับติดต่อประสานงาน) ตัวเลขอย่างเดียว เช่น 0812345678 — ถ้าไม่มีให้เว้นว่าง
-- สถานที่: ⚠️ คัดลอกเฉพาะ**ชื่อสถานที่** จากช่อง "ณ สถานที่/พื้นที่" (เช่น "ฝายน้ำ บ้านป่าแงะ", "วัดฝั่งหมิ่น") — ห้ามรวมคำว่า ต./ตำบล, อ./อำเภอ, จ./จังหวัด เข้าไปในคอลัมน์นี้
-- อำเภอ, จังหวัด: ใช้ค่าจากบรรทัด "เขียนที่" ด้านบนของเอกสาร (ซึ่งเป็นสถานที่ยื่นคำขอ มักจะเป็นเดียวกับสถานที่จัดกิจกรรม) — ไม่ต้องใส่คำว่า อำเภอ/จังหวัด นำหน้า
-- ละติจูด, ลองจิจูด: ตัวเลขทศนิยมของพิกัด คัดลอกให้ครบทุกหลัก ไม่ปัดเศษ
-- องศาละติจูด, องศาลองจิจูด: ค่าในวงเล็บหลังพิกัด คัดลอกตามที่เขียน เช่น 185404.61N และ 990741.01E
-- เส้นผ่านศูนย์กลาง(นิ้ว): แปลงเป็น "นิ้ว" (ซม. ÷ 2.54, เมตร × 39.37, นิ้วใช้ตามเดิม) ปัดทศนิยม 2 ตำแหน่ง
-- ความสูง(ฟุต): ตัวเลขในช่อง "ขึ้นไปในอากาศประมาณ" ใช้ตามตัวเลขเดิม ถือว่าเป็นฟุต
-- รัศมี(NM): ตัวเลขในช่อง "รัศมี" ใช้ตามตัวเลขเดิมโดยไม่แปลงหน่วย ถือว่าเป็น NM
-- จำนวน: ตัวเลขอย่างเดียว
-- น้ำหนัก: พร้อมหน่วยตามที่เขียน เช่น 55 กรัม
-- วันที่เริ่ม, วันที่สิ้นสุด: รูปแบบ YYYY-MM-DD เป็น ค.ศ. (พ.ศ. ลบ 543 เช่น 24 พฤศจิกายน 2569 = 2026-11-24)
-- เวลาเริ่ม, เวลาสิ้นสุด: รูปแบบ HH:MM (เช่น ๑๙.๐๐ = 19:00)
-- หมายเหตุ: ใส่เฉพาะเมื่อมีช่องที่อ่านไม่ชัดหรือไม่แน่ใจ ระบุชื่อช่องและเหตุผลสั้นๆ ไม่เช่นนั้นเว้นว่าง
-
-# ข้อห้ามสำคัญ
-- ห้ามเดา ถ้าอ่านไม่ออกหรือไม่มีข้อมูล ให้เว้นว่างและบันทึกใน หมายเหตุ
-- ห้ามดึงข้อมูลส่วนบุคคลอื่น: เลขประจำตัวประชาชน อายุ ที่อยู่ เบอร์โทรศัพท์ ลายเซ็น
-- อ่านตัวเลขพิกัดและรัศมีซ้ำอีกครั้ง และตรวจว่า ละติจูด/ลองจิจูด ตรงกับค่าองศา (เช่น 185404.61N = 18°54'04.61" ≈ 18.9012) ถ้าไม่ตรง ให้ระบุใน หมายเหตุ
-- ตัวเลขใช้เลขอารบิก (แปลงเลขไทยเป็นอารบิก)
-
-# รูปแบบคำตอบ
-ตอบเป็น CSV ในโค้ดบล็อกเดียว บรรทัดแรกคือหัวคอลัมน์ ครอบข้อความที่มีเครื่องหมายจุลภาคด้วยเครื่องหมายคำพูดคู่ ไม่ต้องมีคำอธิบายนอกโค้ดบล็อก
-⚠️ สำคัญมาก: คอลัมน์ "ผู้จัดกิจกรรม" ต้องครอบด้วย "..." เสมอ เพราะชื่ออาจมีเครื่องหมาย , เช่น "นายก / นางสาวข, นางค" ถ้าไม่ครอบจะทำให้คอลัมน์ทั้งแถวผิดทั้งหมด
-⚠️ สำคัญมาก (COLUMN COUNT): ทุกแถวต้องมี **22 คอลัมน์** (= 21 เครื่องหมาย comma) เสมอ นับให้แน่ใจก่อนตอบ · ถ้าคอลัมน์ไหนไม่มีข้อมูล ให้เว้นว่าง (ไม่ใส่ค่า แต่ยังต้องมี comma) เช่น A,,B,C, ไม่ใช่ A,B,C, · ห้ามเพิ่มหรือลด comma โดยเด็ดขาด เพราะจะทำให้ข้อมูลเลื่อนคอลัมน์ (เช่น ชื่อสถานที่ไปอยู่ในคอลัมน์อำเภอ)
-
-# ตัวอย่างแถวที่ถูกต้อง
-RQ79/2569,โคมลอย,สมชาย ใจดี,"สมชาย ใจดี / สมหญิง รุ่งเรือง",0812345678,วัดฝั่งหมิ่น,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,`;
 const HDR='เลขที่คำขอ,ชนิด,ผู้ขอใบอนุญาต,ผู้จัดกิจกรรม,เบอร์โทรศัพท์,สถานที่,อำเภอ,จังหวัด,ละติจูด,ลองจิจูด,องศาละติจูด,องศาลองจิจูด,เส้นผ่านศูนย์กลาง(นิ้ว),ความสูง(ฟุต),รัศมี(NM),จำนวน,น้ำหนัก,วันที่เริ่ม,วันที่สิ้นสุด,เวลาเริ่ม,เวลาสิ้นสุด,หมายเหตุ';
 const SAMPLE='RQ79/2569,โคมลอย,สมชาย ใจดี,"สมชาย ใจดี / สมหญิง รุ่งเรือง",0812345678,วัดฝั่งหมิ่น,ดอยสะเก็ด,เชียงใหม่,18.901279857919,99.128057449322,185404.61N,990741.01E,35.43,6000,10,50,55 กรัม,2026-11-24,2026-11-24,19:00,23:59,';
 const TYPES=['โคมลอย','โคมไฟ','โคมควัน','พลุ','บั้งไฟ','ตะไล'],MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -636,9 +677,13 @@ const newRep=()=>({ok:0,dup:0,warn:0,bad:[],noHead:[],miss:new Set(),unk:new Set
 function done(rep){refresh();if(rep.ok)fit();
  const parts=[];if(rep.dup)parts.push(`ซ้ำ ${rep.dup}`);if(rep.pdf)parts.push('ไฟล์ PDF ต้องแปลงเป็นตารางด้วย AI ก่อน');if(rep.noHead.length)parts.push(`ไม่พบหัวคอลัมน์: ${rep.noHead.join(', ')}`);if(rep.miss.size)parts.push(`ไม่พบคอลัมน์ <b>${[...rep.miss].join(', ')}</b>`);if(rep.bad.length)parts.push(`ข้ามแถว ${rep.bad.length}: ${rep.bad.slice(0,4).join(' · ')}${rep.bad.length>4?' …':''}`);msg(parts.join('<br>'))}
 async function importFiles(fs){const rep=newRep();for(const f of fs){try{await readFile(f,rep)}catch(e){rep.bad.push(f.name+': อ่านไม่ได้');console.error(e)}}done(rep)}
-$('pasteBtn').onclick=()=>{const rep=newRep(),t=$('paste').value;if(!t.trim())return;procRows(parseText(t),'ข้อความที่วาง',rep);done(rep);if(rep.ok)$('paste').value=''};
-$('helpBtn').onclick=()=>{$('prompt').value=PROMPT;$('help').showModal()};
-$('cpP').onclick=async()=>{try{await navigator.clipboard.writeText(PROMPT)}catch(e){$('prompt').select();document.execCommand('copy')}$('cpP').textContent='✓ คัดลอกแล้ว';setTimeout(()=>$('cpP').textContent='📋 คัดลอก Prompt',1500)};
+function doPasteImport(){const rep=newRep(),t=$('paste').value;if(!t.trim())return;procRows(parseText(t),'ข้อความที่วาง',rep);done(rep);if(rep.ok)$('paste').value=''}
+function warnAI(){if(sessionStorage.getItem('aiOk')==='1')return;$('aiSkip').checked=false;$('aiConfirm').showModal()}
+$('paste').addEventListener('paste',()=>setTimeout(warnAI,0));
+$('pasteBtn').onclick=doPasteImport;
+$('aiCancel').onclick=()=>$('aiConfirm').close();
+$('aiOk').onclick=()=>{if($('aiSkip').checked)sessionStorage.setItem('aiOk','1');$('aiConfirm').close()};
+$('helpBtn').onclick=()=>$('help').showModal();
 $('tpl').onclick=$('tplBtn').onclick=()=>dl('ตัวอย่าง.csv','\ufeff'+HDR+'\n'+SAMPLE+'\n','text/csv');
 function handleDroppedFiles(fs){const arr=[...fs].filter(f=>!/\.pdf$/i.test(f.name));if(arr.length)importFiles(arr)}
 $('drop').onclick=()=>$('file').click();$('file').onchange=e=>{handleDroppedFiles(e.target.files);e.target.value=''};
@@ -674,18 +719,29 @@ function info(l){
  return{t:'เส้น',s:`${p.length} จุด · ระยะรวม <b>${f1(s,3)} NM</b> · ช่วงสุดท้าย ${f1(last,3)} NM`,tip:`${f1(s,3)} NM`}}
 const vtx=l=>{let p=l.getLatLngs();return Array.isArray(p[0])?p[0]:p};
 function panel(){
- $('res').innerHTML=shapes.length?shapes.map((l,i)=>{const d=info(l);return `<div style="border-bottom:1px solid #e2e8f0;padding:4px 0"><b>#${i+1} ${d.t}</b> <a href="#" data-z="${i}">🔍</a> <a href="#" data-x="${i}">✕</a><br>${d.s}${l instanceof L.Circle?`<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin-top:6px"><label style="font-weight:600">Lat</label><input type="number" step="any" value="${l.getLatLng().lat.toFixed(6)}" data-la="${i}" style="width:100%"><label style="font-weight:600">Lng</label><input type="number" step="any" value="${l.getLatLng().lng.toFixed(6)}" data-ln="${i}" style="width:100%"><label style="font-weight:600">รัศมี (NM)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" step="any" value="${f1(l.getRadius()/NM,3)}" data-r="${i}" style="width:100%;min-width:0"><a href="#" data-cp="${i}" style="white-space:nowrap;flex-shrink:0">คัดลอก</a></div></div><div style="margin-top:8px;padding:6px 8px;background:rgba(99,102,241,.08);border-radius:5px;font:14px monospace;font-weight:700;letter-spacing:.5px;text-align:center">${toDMS(l.getLatLng().lat,true)} ${toDMS(l.getLatLng().lng,false)}</div><div style="text-align:right;margin-top:2px"><a href="#" data-cpd="${i}">📋 คัดลอก DMS</a></div>`:`<details><summary>พิกัดแต่ละจุด</summary><div style="font:11px monospace">${vtx(l).map((q,j)=>`${j+1}. ${q.lat.toFixed(6)}, ${q.lng.toFixed(6)}`).join('<br>')}</div></details>`}</div>`}).join(''):'Playground';
+ let encHTML='';if(encInfo){const{lat,lng,r,n}=encInfo,dmsLat=toDMS(lat,true),dmsLng=toDMS(lng,false),dec=`${lat.toFixed(6)}, ${lng.toFixed(6)}`,rStr=f1(r,2),full=`RADIUS ${rStr} NM CENTRE ${dmsLat} ${dmsLng}`;encHTML=`<div style="border:2px dashed #1d4ed8;border-radius:6px;padding:10px;margin-bottom:8px;background:rgba(29,78,216,.06)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><b style="color:#1d4ed8">⭕ วงรวมคำขอ AUTO</b> <span style="color:#64748b;font-size:11px">(${n} คำขอ)</span></div><a href="#" data-encz title="ซูมไปที่จุดศูนย์กลาง" style="color:#2563eb;text-decoration:none;font-size:16px">🔍</a></div><div style="font-size:12px;margin-bottom:2px"><b>CENTRE</b></div><div style="font:13px monospace;font-weight:700;line-height:1.5">${dmsLat}<br>${dmsLng}</div><div style="font-size:11px;color:#64748b;margin-top:2px">${dec}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:6px;border-top:1px dashed rgba(29,78,216,.3)"><span style="font-size:12px"><b>RADIUS:</b> <span style="font-weight:700;color:#1d4ed8;font-size:14px">${rStr} NM</span></span><a href="#" data-enccp="${full}" style="color:#16a34a;font-weight:600;font-size:12px;text-decoration:none">📋 คัดลอก</a></div></div>`}
+ $('res').innerHTML=encHTML+(shapes.length?shapes.map((l,i)=>{const d=info(l);return `<div style="border-bottom:1px solid #e2e8f0;padding:4px 0"><b>#${i+1} ${d.t}</b> <a href="#" data-z="${i}">🔍</a> <a href="#" data-x="${i}">✕</a><br>${d.s}${l instanceof L.Circle?`<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin-top:6px"><label style="font-weight:600">Lat</label><input type="number" step="any" value="${l.getLatLng().lat.toFixed(6)}" data-la="${i}" style="width:100%"><label style="font-weight:600">Lng</label><input type="number" step="any" value="${l.getLatLng().lng.toFixed(6)}" data-ln="${i}" style="width:100%"><label style="font-weight:600">รัศมี (NM)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" step="any" value="${f1(l.getRadius()/NM,3)}" data-r="${i}" style="width:100%;min-width:0"><a href="#" data-cp="${i}" style="white-space:nowrap;flex-shrink:0">คัดลอก</a></div></div><div style="margin-top:8px;padding:6px 8px;background:rgba(99,102,241,.08);border-radius:5px;font:14px monospace;font-weight:700;letter-spacing:.5px;text-align:center">${toDMS(l.getLatLng().lat,true)} ${toDMS(l.getLatLng().lng,false)}</div><div style="text-align:right;margin-top:2px"><a href="#" data-cpd="${i}">📋 คัดลอก DMS</a></div>`:`<details><summary>พิกัดแต่ละจุด</summary><div style="font:11px monospace">${vtx(l).map((q,j)=>`${j+1}. ${q.lat.toFixed(6)}, ${q.lng.toFixed(6)}`).join('<br>')}</div></details>`}</div>`}).join(''):(encInfo?'':'Playground'));
  shapes.forEach(l=>l.setTooltipContent(info(l).tip))}
 const histS=[];
 function snapShape(l){if(l instanceof L.Circle){const ll=l.getLatLng();histS.push({l,lat:ll.lat,lng:ll.lng,r:l.getRadius()});if(histS.length>50)histS.shift();$('undoBtn')&&$('undoBtn').removeAttribute('disabled')}}
 function undoShape(){while(histS.length){const s=histS.pop();if(shapes.includes(s.l)&&s.l instanceof L.Circle){s.l.setLatLng([s.lat,s.lng]);s.l.setRadius(s.r);if(s.l.pm.enabled()){s.l.pm.disable();s.l.pm.enable()}panel();break}}if(!histS.length&&$('undoBtn'))$('undoBtn').setAttribute('disabled','')}
-function reg(l){shapes.push(l);l.bindTooltip(info(l).tip,{permanent:true,direction:'center',className:'mt'});
+async function cp(tx){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(tx);return true}}catch(e){}
+ try{const ta=document.createElement('textarea');ta.value=tx;ta.style.cssText='position:fixed;top:-100px;left:0;opacity:0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');document.body.removeChild(ta);return ok}catch(e){return false}}
+async function copyShape(l){let tx;if(l instanceof L.Circle){const ll=l.getLatLng();tx=`RADIUS ${f1(l.getRadius()/NM,2)} NM ${toDMS(ll.lat,true)} ${toDMS(ll.lng,false)}`}else{tx=vtx(l).map(q=>`${toDMS(q.lat,true)} ${toDMS(q.lng,false)}`).join(' / ')}
+ const ok=await cp(tx);const el=l.getTooltip()?.getElement();if(el){el.classList.add('copied');l.getTooltip().setContent(ok?'✓ คัดลอกแล้ว':'✗ คัดลอกไม่ได้');setTimeout(()=>{el.classList.remove('copied');const cur=l.getTooltip();if(cur)cur.setContent(info(l).tip)},1200)}}
+function reg(l){shapes.push(l);l.bindTooltip(info(l).tip,{permanent:true,direction:'center',className:'mt',interactive:true});
+ const bind=el=>{if(!el||el._cpBound)return;el._cpBound=true;el.style.cursor='pointer';el.title='คลิกเพื่อคัดลอก';L.DomEvent.disableClickPropagation(el);L.DomEvent.on(el,'click',ev=>{L.DomEvent.stop(ev);copyShape(l)})};
+ l.on('tooltipopen',e=>bind(e.tooltip.getElement()));
+ setTimeout(()=>bind(l.getTooltip()?.getElement()),50);
  l.on('pm:dragstart',()=>snapShape(l));l.on('pm:markerdragstart',()=>snapShape(l));
  ['pm:edit','pm:update','pm:dragend','pm:drag','pm:markerdrag','pm:markerdragend','pm:vertexadded','pm:vertexremoved','pm:centerplaced'].forEach(ev=>l.on(ev,panel));panel()}
 function circ(lat,lng,r){const l=L.circle([lat,lng],{radius:r*NM,color:'#2563eb',fillOpacity:.12}).addTo(map);reg(l);l.pm.enable();return l}
 map.on('pm:create',e=>reg(e.layer));
 map.on('pm:remove',e=>{shapes=shapes.filter(x=>x!==e.layer);panel()});
-$('res').onclick=e=>{const t=e.target;if(t.dataset.cpd!=null){e.preventDefault();const c=shapes[t.dataset.cpd],ll=c.getLatLng(),tx=`RADIUS ${f1(c.getRadius()/NM,2)} NM ${toDMS(ll.lat,true)} ${toDMS(ll.lng,false)}`;(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).catch(()=>{});t.textContent='✓';setTimeout(()=>t.textContent='คัดลอก',1500);return}
+$('res').onclick=e=>{const t=e.target;
+ if(t.dataset.encz!=null){e.preventDefault();if(encInfo){map.flyTo([encInfo.lat,encInfo.lng],Math.max(7,13-Math.log2(encInfo.r||1)))}return}
+ if(t.dataset.enccp!=null){e.preventDefault();cp(t.dataset.enccp);const o=t.textContent;t.textContent='✓ คัดลอกแล้ว';setTimeout(()=>t.textContent=o,1500);return}
+ if(t.dataset.cpd!=null){e.preventDefault();const c=shapes[t.dataset.cpd],ll=c.getLatLng(),tx=`RADIUS ${f1(c.getRadius()/NM,2)} NM ${toDMS(ll.lat,true)} ${toDMS(ll.lng,false)}`;(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).catch(()=>{});t.textContent='✓';setTimeout(()=>t.textContent='คัดลอก',1500);return}
  if(t.dataset.cp!=null){e.preventDefault();const c=shapes[t.dataset.cp],ll=c.getLatLng(),tx=`${ll.lat.toFixed(6)}, ${ll.lng.toFixed(6)}, รัศมี ${f1(c.getRadius()/NM,3)} NM`;(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).catch(()=>{});t.textContent='✓ คัดลอกแล้ว';return}
  const i=t.dataset.z??t.dataset.x;if(i==null)return;e.preventDefault();const l=shapes[i];
  if(t.dataset.x!=null){l.remove();shapes.splice(i,1);panel()}else map.fitBounds(l.getBounds())};
@@ -720,14 +776,14 @@ async function exportWord(){
     const mkP=(t,bold,sz)=>new D.Paragraph({children:[mkT(t,bold,sz)]});
     const mkH=h=>new D.TableCell({children:[new D.Paragraph({children:[mkT(h,true,11,'FFFFFF')],alignment:'center'})],shading:{fill:'4472C4',type:'clear',color:'auto'},margins:{top:60,bottom:60,left:80,right:80}});
     const mkDc=(txt,ctr)=>new D.TableCell({children:[new D.Paragraph({children:[mkT(txt,false,11)],alignment:ctr?'center':'left'})],margins:{top:40,bottom:40,left:80,right:80}});
-    const COLS=['ช่องทางที่ได้รับ','ชื่ออีเมล/LINE','หมายเลขรับเอกสารอำเภอ (RQ)','ตรวจสอบพิกัด','INT OFFICER','ส่งเอกสารให้ Planner','วันที่เริ่ม','วันที่สิ้นสุด','สถานที่','อำเภอ','จังหวัด','พิกัด LAT','พิกัด LONG','เส้นผ่านศูนย์กลาง (นิ้ว)','รัศมี (NM)','ความสูง (FT)','ผู้ประสานงาน','เบอร์โทรศัพท์','เวลาเริ่ม','เวลาสิ้นสุด'];
+    const COLS=['หมายเลขรับเอกสารอำเภอ (RQ)','วันที่เริ่ม','วันที่สิ้นสุด','สถานที่','อำเภอ','จังหวัด','พิกัด LAT','พิกัด LONG','เส้นผ่านศูนย์กลาง (นิ้ว)','รัศมี (NM)','ความสูง (FT)','ผู้ประสานงาน','เบอร์โทรศัพท์','เวลาเริ่ม','เวลาสิ้นสุด'];
     const fmtD=d=>{if(!d)return'';const[y,mo,da]=d.split('-');return`${da}/${mo}/${y}`};
     const fmtT=t=>(t||'').replace(':','');
     const firstOrg=o=>(o||'').split(/[\/,]/)[0].trim();
     const tbl=new D.Table({width:{size:100,type:'pct'},rows:[
       new D.TableRow({tableHeader:true,children:COLS.map(mkH)}),
       ...v.map(r=>new D.TableRow({children:[
-        mkDc('',true),mkDc('',true),mkDc(r.id,true),mkDc('',true),mkDc('',true),mkDc('',true),
+        mkDc(r.id,true),
         mkDc(fmtD(r.d1),true),mkDc(fmtD(r.d2||r.d1),true),
         mkDc(r.place||'',false),mkDc(r.amphoe||'',true),mkDc(r.prov||'',true),
         mkDc(toDMS(r.lat,true),true),mkDc(toDMS(r.lng,false),true),
@@ -740,7 +796,7 @@ async function exportWord(){
       ]}))
     ]});
     const doc=new D.Document({sections:[{
-      properties:{page:{margin:{top:720,right:720,bottom:720,left:720},size:{width:16838,height:11906,orientation:'landscape'}}},
+      properties:{page:{margin:{top:720,right:720,bottom:720,left:720},size:{width:11906,height:16838,orientation:D.PageOrientation.LANDSCAPE}}},
       children:[
         new D.Paragraph({children:[mkT(`รวบ ${v.length} คำขอ   `,true,22),mkT('ตรวจสอบข้อมูลภายในเอกสารก่อนส่ง Planner ทุกครั้ง',true,14,'C00000')]}),
         mkP(`วันที่: ${dateStr}`,false,16),
@@ -748,7 +804,7 @@ async function exportWord(){
         mkP(`ความสูง GND-${maxFt||'?'}FT AGL`,false,16),
         mkP(`พิกัดรวมคำขอ RADIUS ${f1(encR,1)} NM CENTRE ${cLat.toFixed(6)}, ${cLng.toFixed(6)}`,false,14),
         new D.Paragraph({}),tbl,new D.Paragraph({}),
-        mkP('พิกัดที่รวมคำขอ',true,14),
+        mkP('รูปพิกัดที่รวมคำขอ',true,14),
         new D.Paragraph({children:[new D.TextRun({text:'[โปรดแทรกรูปแผนที่ที่นี่]',font:fn,size:24,color:'AAAAAA',italics:true})]})
       ]
     }]});
@@ -762,7 +818,13 @@ $('wordBtn').onclick=exportWord;
 const SHARE_KEYS=['id','type','lat','lng','dIn','ft','rNM','qty','wt','d1','d2','t1','t2','place','amphoe','prov'];
 function encodeShare(){const data=vExp().map(r=>SHARE_KEYS.map(k=>r[k]??''));return btoa(unescape(encodeURIComponent(JSON.stringify(data))))}
 function decodeShare(s){try{const arr=JSON.parse(decodeURIComponent(escape(atob(s))));return arr.map(row=>{const o={};SHARE_KEYS.forEach((k,i)=>o[k]=row[i]);o.cat=catOf(o.type);o.name='';o.org='';o.tel='';o.date=o.d1?(o.d2&&o.d2!==o.d1?thD(o.d1)+' – '+thD(o.d2):thD(o.d1)):'';o.time=o.t1&&o.t2?o.t1+'-'+o.t2:(o.t1||'');o.warn='';o.uid=uid();return o})}catch(e){console.warn('share decode fail',e);return null}}
-$('shareBtn').onclick=async()=>{const v=vExp();if(!v.length){alert('ไม่มีข้อมูลที่จะแชร์');return}const url=location.origin+location.pathname+'#s='+encodeShare();try{await navigator.clipboard.writeText(url);const b=$('shareBtn');const o=b.textContent;b.textContent=`✓ คัดลอกลิงก์ ${v.length} คำขอ`;setTimeout(()=>b.textContent=o,2000)}catch(e){prompt('คัดลอกลิงก์นี้:',url)}};
+$('shareBtn').onclick=async()=>{const v=vExp();if(!v.length){alert('ไม่มีข้อมูลที่จะแชร์');return}
+ if(location.protocol==='file:'){alert('⚠️ ลิงก์แชร์ใช้งานไม่ได้บนไฟล์ local (file://)\nต้องเปิดผ่าน web server (เช่น Live Server · GitHub Pages · hosting)\nหรือใช้ "ส่งออก JSON" แทน');return}
+ const url=location.href.split('#')[0]+'#s='+encodeShare();
+ const ok=await cp(url);
+ const b=$('shareBtn'),o=b.textContent;
+ if(ok){b.textContent=`✓ คัดลอกลิงก์ ${v.length} คำขอ`;setTimeout(()=>b.textContent=o,2000)}
+ else{prompt('คัดลอกลิงก์นี้ด้วยตนเอง (Ctrl+C):',url)}};
 (()=>{const h=location.hash;if(h.startsWith('#s=')){const arr=decodeShare(h.slice(3));if(arr&&arr.length){recs.push(...arr);refresh();fit();msg(`📥 โหลด <b>${arr.length}</b> คำขอจากลิงก์แชร์ (ไม่มีข้อมูลผู้ขอ/เบอร์โทร)`);history.replaceState(null,'',location.pathname)}}})();
 // ---- OCR PDF (PDF.js text layer + Tesseract.js fallback)
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
